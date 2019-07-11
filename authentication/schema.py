@@ -6,9 +6,8 @@ from .helpers import UserValidations
 from graphql import GraphQLError
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
-from graphql_extensions.auth.decorators import (
-    login_required, staff_member_required,
-)
+from graphql_extensions.auth.decorators import login_required
+
 
 
 user_validator = UserValidations()
@@ -74,7 +73,6 @@ class UpdateUser(graphene.Mutation):
         is_active = kwargs.get('is_active')
         bio = kwargs.get('bio')
         image = kwargs.get('image')
-        user_validator.validate_logged_in(info)
         valid_username = user_validator.clean_username(username)
         valid_email = user_validator.clean_email(email)
         if info.context.user.id != id:

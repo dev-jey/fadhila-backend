@@ -7,7 +7,7 @@ class MessageType(DjangoObjectType):
         model = Message
         interfaces = (Node, )
         filter_fields = {
-            "title": ["icontains"],
-            "content":["icontains"],
+            "title": ["icontains", "istartswith"],
+            "content":["icontains", "istartswith"],
             "created_at":["exact"]
         }

@@ -11,3 +11,4 @@ class UserType(DjangoObjectType):
         filter_fields = {
             "username": ["exact", "icontains", "istartswith"]
         }
+        exclude_fields=('created_at', 'updated_at','password')
