@@ -40,7 +40,6 @@ class CreateUser(graphene.Mutation):
         password = graphene.String()
         email = graphene.String()
     
-    @login_required
     def mutate(self, info, **kwargs):
         user_data = user_validator.validate_entered_data(kwargs)
         new_user = User(
