@@ -6,26 +6,42 @@ from .helpers import UserValidations
 from graphql import GraphQLError
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
+from graphql_extensions.auth.decorators import (
+    login_required, staff_member_required,
+)
+
 
 user_validator = UserValidations()
 
 class Query(graphene.AbstractType):
     profile = graphene.List(UserType, username=graphene.String())
-    
+    current_user = graphene.Field(UserType)
+
+    @login_required
     def resolve_profile(self, info, username):
         existing_profile = User.objects.filter(username=username)
         if existing_profile:
             return existing_profile
         raise GraphQLError('User does not exist')
+    
+    @login_required
+    def resolve_current_user(self, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Kindly login to continue!')
+        return user
 
 
 class CreateUser(graphene.Mutation):
+
+    user = graphene.Field(UserType)
+
     class Arguments:
         username = graphene.String()
         password = graphene.String()
         email = graphene.String()
-    user = graphene.Field(UserType)
-
+    
+    @login_required
     def mutate(self, info, **kwargs):
         user_data = user_validator.validate_entered_data(kwargs)
         new_user = User(
@@ -37,6 +53,9 @@ class CreateUser(graphene.Mutation):
         return CreateUser(user=new_user)
 
 class UpdateUser(graphene.Mutation):
+
+    user = graphene.Field(UserType)
+
     class Arguments:
         id = graphene.Int()
         username = graphene.String()
@@ -45,8 +64,7 @@ class UpdateUser(graphene.Mutation):
         bio = graphene.String() 
         image = graphene.String()
     
-    user = graphene.Field(UserType)
-
+    @login_required
     def mutate(
         self, info, **kwargs
         ):
@@ -79,11 +97,13 @@ class UpdateUser(graphene.Mutation):
     
 
 class DeactivateAccount(graphene.Mutation):
-    class Arguments:
-        username = graphene.String()
 
     user = graphene.Field(UserType)
 
+    class Arguments:
+        username = graphene.String()
+
+    @login_required
     def mutate(self, info, username):
         valid_username = user_validator.clean_username(username)
         user_validator.validate_logged_in(info)
@@ -99,7 +119,7 @@ class DeactivateAccount(graphene.Mutation):
             existing_user.save()
             return DeactivateAccount(user=existing_user)
         except ObjectDoesNotExist:
-            raise GraphQLError("The user does not exist")
+            raise GraphQLError("The user does not exist") 
 
 
 class Mutation(graphene.ObjectType):

@@ -6,12 +6,7 @@ from .models import User
 from django.contrib.auth.password_validation import validate_password
 
 class UserValidations(object):
-    def validate_logged_in(self, info):
-        user = info.context.user
-        if user.is_anonymous:
-            raise GraphQLError('Kindly login to continue')
-        return True
-
+    
     def validate_entered_data(self, kwargs):
         input_username = kwargs.get('username')
         input_email = kwargs.get('email')

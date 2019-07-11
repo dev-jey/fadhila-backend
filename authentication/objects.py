@@ -4,6 +4,7 @@ from graphene import Node
 
 
 class UserType(DjangoObjectType):
+
     class Meta:
         model = User
         interfaces = (Node, )
