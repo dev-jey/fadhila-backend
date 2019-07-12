@@ -3,6 +3,7 @@ astroid==2.2.5
 autopep8==1.4.3
 dj-database-url==0.5.0
 Django==2.2.3
+django-cors-headers==3.0.2
 django-filter==2.1.0
 django-graphql-extensions==0.0.6
 django-graphql-jwt==0.2.1
