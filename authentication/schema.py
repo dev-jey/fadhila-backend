@@ -22,20 +22,20 @@ class Query(graphene.AbstractType):
     profile = graphene.List(UserType, username=graphene.String())
     current_user = graphene.Field(UserType)
 
-    @classmethod
     @login_required
-    def resolve_profile(cls, info, username):
+    def resolve_profile(self, info, username):
         '''Resolves the profile of the provided username'''
         existing_profile = User.objects.filter(username=username)
         if existing_profile:
             return existing_profile
         raise GraphQLError('User does not exist')
 
-    @classmethod
     @login_required
-    def resolve_current_user(cls, info):
+    def resolve_current_user(self, info):
         '''Resolves the currently logged in user'''
         user = info.context.user
+        if user.is_anonymous:
+            return GraphQLError('Kindly login to continue')
         return user
 
 
