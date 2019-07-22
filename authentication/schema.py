@@ -51,8 +51,8 @@ class CreateUser(graphene.Mutation):
         password = graphene.String()
         email = graphene.String()
 
-    @classmethod
-    def mutate(cls, **kwargs):
+
+    def mutate(self, info, **kwargs):
         '''Mutation for user creation. Actual saving happens here'''
         user_data = USER_VALIDATOR.validate_entered_data(kwargs)
         new_user = User(
@@ -79,9 +79,8 @@ class UpdateUser(graphene.Mutation):
         bio = graphene.String()
         image = graphene.String()
 
-    @classmethod
     @login_required
-    def mutate(cls, info, **kwargs):
+    def mutate(self, info, **kwargs):
         '''Gets the new user info and updates it in the db'''
         user_id = kwargs.get('id')
         username = kwargs.get('username')
