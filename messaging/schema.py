@@ -17,3 +17,16 @@ class Query(graphene.AbstractType):
         if not messages:
             raise GraphQLError("No available messages")
         return messages
+    
+class Mutation(graphene.Mutation):
+
+    message = Node.Field(MessageType)
+
+    class Arguments:
+        no_of_cards = graphene.String()
+
+
+
+    @login_required
+    def mutate(self, info, **kwargs):
+        return 'x'

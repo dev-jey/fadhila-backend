@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'messenger.schema.schema',
+    'SCHEMA': 'messenger.schema.SCHEMA',
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
@@ -43,6 +43,10 @@ AUTHENTICATION_BACKENDS = [
     'graphql_jwt.backends.JSONWebTokenBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+GRAPHQL_JWT = {
+    'JWT_ALLOW_ARGUMENT': True,
+}
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -131,6 +135,6 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'authentication.User'
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'text-messenger-app.herokuapp.com',
-    'localhost:3000',
+    'https://text-messenger-app.herokuapp.com',
+    'http://localhost:3000',
 )
