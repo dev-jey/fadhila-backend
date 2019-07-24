@@ -61,7 +61,7 @@ class CreateUser(graphene.Mutation):
         )
         new_user.set_password(user_data['password'])
         new_user.save()
-        return CreateUser(user=new_user, token=new_user.token)
+        return CreateUser(user=new_user)
 
 
 class UpdateUser(graphene.Mutation):
