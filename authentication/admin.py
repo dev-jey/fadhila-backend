@@ -5,12 +5,12 @@ from .models import User
 
 class UserAdmin(admin.ModelAdmin):
     '''Customizes the admin interface'''
-    list_display = ['username', 'email', 'is_active',
+    list_display = ['username', 'email', 'is_deactivated',
                     'is_verified', 'is_staff', 'is_superuser'
                     ]
-    list_filter = ('is_superuser', 'is_staff', 'is_active', 'is_verified')
+    list_filter = ('is_superuser', 'is_staff', 'is_deactivated', 'is_verified')
     # fields = [('email', 'username'),
-    #           ('is_staff', 'is_superuser'), ('is_verified', 'is_active')]
+    #           ('is_staff', 'is_superuser'), ('is_verified', 'is_deactivated')]
     fieldsets = (
         ('Personal info', {
             'fields': ('email', 'username')
@@ -19,7 +19,7 @@ class UserAdmin(admin.ModelAdmin):
             'fields': ('is_staff', 'is_superuser')
         }),
         ('Active status', {
-            'fields': ('is_verified', 'is_active')
+            'fields': ('is_verified', 'is_deactivated')
         })
     )
 

@@ -1,17 +1,28 @@
 '''User authentication, updating and deactivation'''
 #Third party imports
+import os
 import graphene
+import graphql_jwt
 from graphql import GraphQLError
 from django.core.exceptions import ObjectDoesNotExist
 from graphql_extensions.auth.decorators import login_required
+from django.core.mail import EmailMessage
+from django.utils.encoding import force_bytes, force_text
+from django.contrib.auth import authenticate
+#Local imports
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
 
 #Local imports
 from .objects import UserType
 from .models import User
 from .helpers import UserValidations
+from .token_generator import TokenGenerator
 
 
 USER_VALIDATOR = UserValidations()
+TOKEN_GENERATOR = TokenGenerator()
 
 
 class Query(graphene.AbstractType):
@@ -43,7 +54,6 @@ class CreateUser(graphene.Mutation):
     '''Handle creation of a user and saving to the db'''
     #items that the mutation will return
     user = graphene.Field(UserType)
-    token = graphene.String()
 
     class Arguments:
         '''Arguments to be passed in during the user creation'''
@@ -61,8 +71,46 @@ class CreateUser(graphene.Mutation):
         )
         new_user.set_password(user_data['password'])
         new_user.save()
+        message = render_to_string('send_activate_email.html', {
+            'user':new_user,
+            'domain':os.environ['CURRENT_DOMAIN'],
+            'uid': urlsafe_base64_encode(force_bytes(new_user.pk)),
+            'token': ACCOUNT_ACTIVATION_TOKEN.make_token(new_user),
+        })
+        mail_subject = 'Fadhila Co. Activate your account at Fadhila.'
+        to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
+        email = EmailMessage(mail_subject, message, to=[to_email])
+        email.send()
         return CreateUser(user=new_user)
 
+
+class ActivateUser(graphene.Mutation):
+    '''Activates a user during registration'''
+    #items return from the mutation
+    user = graphene.Field(UserType)
+    token = graphene.String()
+
+    class Arguments:
+        '''Arguments that will be passed to the mutation'''
+        uidb64 = graphene.String()
+        access_token = graphene.String()
+
+    def mutate(self, info, **kwargs):
+        '''confirm if the given token and uidb64 are valid,
+        and activate the user in the db'''
+        uidb64 = kwargs.get('uidb64')
+        access_token = kwargs.get('access_token')
+        try:
+            uid = force_text(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(id=uid)
+        except(TypeError, ValueError, OverflowError, ObjectDoesNotExist):
+            user = None
+        if not user or not ACCOUNT_ACTIVATION_TOKEN.check_token(user, access_token):
+            return GraphQLError('There has been a problem in verifying your account')
+        user.is_verified = True
+        token = TOKEN_GENERATOR.generate(user.email)
+        user.save()
+        return ActivateUser(user=user, token=token)
 
 class UpdateUser(graphene.Mutation):
     '''Handles the updating of a user information'''
@@ -75,7 +123,7 @@ class UpdateUser(graphene.Mutation):
         id = graphene.Int()
         username = graphene.String()
         email = graphene.String()
-        is_active = graphene.Boolean()
+        is_deactivated = graphene.Boolean()
         bio = graphene.String()
         image = graphene.String()
 
@@ -85,7 +133,7 @@ class UpdateUser(graphene.Mutation):
         user_id = kwargs.get('id')
         username = kwargs.get('username')
         email = kwargs.get('email')
-        is_active = kwargs.get('is_active')
+        is_deactivated = kwargs.get('is_deactivated')
         bio = kwargs.get('bio')
         image = kwargs.get('image')
         valid_username = USER_VALIDATOR.clean_username(username)
@@ -100,7 +148,7 @@ class UpdateUser(graphene.Mutation):
                 username=valid_username,
                 email=valid_email,
                 bio=bio,
-                is_active=is_active,
+                is_deactivated=is_deactivated,
                 image=image
             )
             existing_user = User.objects.get(id=user_id)
@@ -120,17 +168,17 @@ class DeactivateAccount(graphene.Mutation):
 
     @login_required
     def mutate(self, info, username):
-        '''Updates the is_active field and saves the new info'''
+        '''Updates the is_deactivated field and saves the new info'''
         valid_username = USER_VALIDATOR.clean_username(username)
         try:
             existing_user = User.objects.get(username=valid_username)
-            if not existing_user.is_active:
+            if not existing_user.is_deactivated:
                 raise GraphQLError('User already deactivated')
             if valid_username != info.context.user.username:
                 raise GraphQLError(
                     "You can only update your own profile"
                 )
-            existing_user.is_active = False
+            existing_user.is_deactivated = False
             existing_user.save()
             return DeactivateAccount(user=existing_user)
         except ObjectDoesNotExist:
@@ -140,5 +188,6 @@ class DeactivateAccount(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     create_user = CreateUser.Field()
+    activate_user = ActivateUser.Field()
     update_user = UpdateUser.Field()
     deactivate_account = DeactivateAccount.Field()

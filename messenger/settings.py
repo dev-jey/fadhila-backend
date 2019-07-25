@@ -138,3 +138,8 @@ CORS_ORIGIN_WHITELIST = (
     'https://text-messenger-app.herokuapp.com',
     'http://localhost:3000',
 )
+EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
+EMAIL_HOST = os.environ['EMAIL_HOST']
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_PORT = os.environ['EMAIL_PORT']

@@ -32,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     '''Defines the attributes in the user model'''
     username = models.CharField(db_index=True, max_length=255, unique=True)
     email = models.EmailField(db_index=True, unique=True)
-    is_active = models.BooleanField(default=True)
+    is_deactivated = models.BooleanField(default=False)
     bio = models.TextField(blank=True)
     image = models.TextField(
         "image",
@@ -46,4 +46,4 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username

@@ -4,6 +4,7 @@ from graphql import GraphQLError
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ObjectDoesNotExist
 #Local imports
 from .models import User
 
@@ -43,15 +44,52 @@ class UserValidations(object):
         '''Cleans the password'''
         return password.strip()
 
-    @classmethod
-    def check_already_existing(cls, username, email):
+
+    def check_already_existing(self, username, email):
         '''Checks if the email or username is already existing'''
-        username_existing = User.objects.filter(username=username)
-        if username_existing:
+        try:
+            username_existing = User.objects.get(username=username)
+        except ObjectDoesNotExist:
+            username_existing = None
+
+        if username_existing and username_existing.is_verified:
             raise GraphQLError('Username already exists')
-        email_existing = User.objects.filter(email=email)
-        if email_existing:
+        if username_existing and not username_existing.is_verified:
+            raise GraphQLError('Account already created.'+
+                               'Kindly verify it via email to continue')
+
+        self.check_mail_already_existing(email)
+
+    @classmethod
+    def check_mail_already_existing(cls, email):
+        '''Checks if email already exists in the db'''
+        try:
+            email_existing = User.objects.get(email=email)
+        except ObjectDoesNotExist:
+            email_existing = None
+
+        if email_existing and email_existing.is_verified:
             raise GraphQLError('Email already exists')
+        if email_existing and not email_existing.is_verified:
+            raise GraphQLError('Account already created.'+
+                               'Kindly verify it via email to continue')
+
+    @classmethod
+    def check_active_and_verified_status(cls, email):
+        '''checks whether the account is deactivated or unverified'''
+        try:
+            email_existing = User.objects.get(email=email)
+        except ObjectDoesNotExist:
+            email_existing = None
+
+        if email_existing and email_existing.is_deactivated:
+            raise GraphQLError('Account is temporarily deactivated.' +
+                               'Kindly activate it to continue.')
+        if email_existing and not email_existing.is_verified:
+            raise GraphQLError('Account is not verified.'+
+                               'Kindly verify your account via the link sent to your '+
+                               'email to continue')
+
 
 
     def check_already_existing_during_update(self, info, username, email):
