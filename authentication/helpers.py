@@ -52,11 +52,8 @@ class UserValidations(object):
         except ObjectDoesNotExist:
             username_existing = None
 
-        if username_existing and username_existing.is_verified:
+        if username_existing:
             raise GraphQLError('Username already exists')
-        if username_existing and not username_existing.is_verified:
-            raise GraphQLError('Account already created.'+
-                               'Kindly verify it via email to continue')
 
         self.check_mail_already_existing(email)
 
