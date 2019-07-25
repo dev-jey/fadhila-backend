@@ -2,19 +2,17 @@
 #Third party imports
 import os
 import graphene
-import graphql_jwt
 from graphql import GraphQLError
 from django.core.exceptions import ObjectDoesNotExist
 from graphql_extensions.auth.decorators import login_required
-from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
-from django.contrib.auth import authenticate
-#Local imports
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
-from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
 
 #Local imports
+from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
 from .objects import UserType
 from .models import User
 from .helpers import UserValidations
@@ -79,7 +77,9 @@ class CreateUser(graphene.Mutation):
         })
         mail_subject = 'Fadhila Co. Activate your account at Fadhila.'
         to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
-        email = EmailMessage(mail_subject, message, to=[to_email])
+        stripped_message = strip_tags(message)
+        email = EmailMultiAlternatives(mail_subject, stripped_message, to=[to_email])
+        email.attach_alternative(message, "text/html")
         email.send()
         return CreateUser(user=new_user)
 
