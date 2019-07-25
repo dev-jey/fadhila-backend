@@ -36,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField(blank=True)
     image = models.TextField(
         "image",
-        default="https://res.cloudinary.com/dw675k0f5/image/upload/v1542660993/sample.jpg")
+        default="https://res.cloudinary.com/dw675k0f5/image/upload/v1564061781/storo/Screen_Shot_2019-07-25_at_16.35.29.png")
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
