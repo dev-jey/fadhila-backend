@@ -105,7 +105,7 @@ class ActivateUser(graphene.Mutation):
             user = User.objects.get(id=uid)
         except(TypeError, ValueError, OverflowError, ObjectDoesNotExist):
             user = None
-        if not user or not ACCOUNT_ACTIVATION_TOKEN.check_token(user, access_token):
+        if not user or not ACCOUNT_ACTIVATION_TOKEN.check_token(user, access_token) or user.is_deactivated:
             return GraphQLError('There has been a problem in verifying your account')
         user.is_verified = True
         token = TOKEN_GENERATOR.generate(user.email)
