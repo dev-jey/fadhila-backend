@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css?family=Darker+Grotesque&display=swap');
+body{
+    max-width: 500px;
+    width: 100%;
+    margin: auto;
+    font-family: 'Darker Grotesque', sans-serif;
+    padding: 1%;
+}
+.title{
+    background: #4abdac;
+    font-size: 24px;
+    padding: 6%;
+    width: 100%;
+    color: #fff;
+}
+.content{
+    font-size: 16px;
+    background: rgb(246, 246, 246);
+    width: 100%;
+    padding: 6%;
+    margin: auto;
+}
+.footer{
+    color: rgb(117, 117, 117);
+}
+.link{
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 12px;
+    background: #f7b733;
+    color: #ffffff;
+    text-align: center;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0px 0px 10px #00000059;
+    margin: auto;
+}

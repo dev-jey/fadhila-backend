@@ -75,7 +75,7 @@ class CreateUser(graphene.Mutation):
             'uid': urlsafe_base64_encode(force_bytes(new_user.pk)),
             'token': ACCOUNT_ACTIVATION_TOKEN.make_token(new_user),
         })
-        mail_subject = 'Fadhila Co. Activate your account at Fadhila.'
+        mail_subject = 'Activate your account at Fadhila.'
         to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
         stripped_message = strip_tags(message)
         email = EmailMultiAlternatives(mail_subject, stripped_message, to=[to_email])

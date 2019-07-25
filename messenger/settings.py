@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django.contrib.messages',
+    'django_inlinecss',
     'corsheaders',
     'authentication',
     'messaging',
