@@ -140,8 +140,8 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'authentication.User'
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'https://fadhila.herokuapp.com',
-    'http://localhost:3000',
+    'fadhila.herokuapp.com',
+    'localhost:3000',
 )
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
 EMAIL_HOST = os.environ['EMAIL_HOST']
