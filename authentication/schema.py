@@ -69,19 +69,24 @@ class CreateUser(graphene.Mutation):
         )
         new_user.set_password(user_data['password'])
         new_user.save()
-        message = render_to_string('send_activate_email.html', {
-            'user':new_user,
-            'domain':os.environ['CURRENT_DOMAIN'],
-            'uid': urlsafe_base64_encode(force_bytes(new_user.pk)),
-            'token': ACCOUNT_ACTIVATION_TOKEN.make_token(new_user),
-        })
-        mail_subject = 'Activate your account at Fadhila.'
-        to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
-        stripped_message = strip_tags(message)
-        email = EmailMultiAlternatives(mail_subject, stripped_message, to=[to_email])
-        email.attach_alternative(message, "text/html")
-        email.send()
-        return CreateUser(user=new_user)
+        try:
+            message = render_to_string('send_activate_email.html', {
+                'user':new_user,
+                'domain':os.environ['CURRENT_DOMAIN'],
+                'uid': urlsafe_base64_encode(force_bytes(new_user.pk)),
+                'token': ACCOUNT_ACTIVATION_TOKEN.make_token(new_user),
+            })
+            mail_subject = 'Activate your account at Fadhila.'
+            to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
+            stripped_message = strip_tags(message)
+            email = EmailMultiAlternatives(mail_subject, stripped_message, to=[to_email])
+            email.attach_alternative(message, "text/html")
+            email.send()
+            return CreateUser(user=new_user)
+        except:
+            new_user.delete()
+            raise GraphQLError('There has been a problem in registering you. '+
+                               'Kindly check your internet connection and try again')
 
 
 class ActivateUser(graphene.Mutation):
@@ -105,7 +110,8 @@ class ActivateUser(graphene.Mutation):
             user = User.objects.get(id=uid)
         except(TypeError, ValueError, OverflowError, ObjectDoesNotExist):
             user = None
-        if not user or not ACCOUNT_ACTIVATION_TOKEN.check_token(user, access_token) or user.is_deactivated:
+        correct_token = ACCOUNT_ACTIVATION_TOKEN.check_token(user, access_token)
+        if not user or not correct_token or user.is_deactivated:
             return GraphQLError('There has been a problem in verifying your account')
         user.is_verified = True
         token = TOKEN_GENERATOR.generate(user.email)
