@@ -1,0 +1,17 @@
+{
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+
+  ],
+  "description": "This is the application backend",
+  "env": {
+  },
+  "formation": {
+  },
+  "name": "Fadhila backend",
+  "scripts": {
+  },
+  "stack": "heroku-18"
+}
