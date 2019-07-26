@@ -83,7 +83,7 @@ class CreateUser(graphene.Mutation):
             email.attach_alternative(message, "text/html")
             email.send()
             return CreateUser(user=new_user)
-        except:
+        except BaseException as error:
             new_user.delete()
             raise GraphQLError('There has been a problem in registering you. '+
                                'Kindly check your internet connection and try again')
