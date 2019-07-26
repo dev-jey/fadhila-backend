@@ -1,7 +1,7 @@
 '''JWT token generation'''
 from datetime import datetime, timedelta
 import jwt
-from fadhila.settings import SECRET_KEY
+from messenger.settings import SECRET_KEY
 
 class TokenGenerator:
     '''Generates a jwt token'''

@@ -28,13 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django_inlinecss',
     'corsheaders',
-    'apps.authentication',
-    'apps.messaging',
+    'messenger.apps.authentication',
+    'messenger.apps.messaging',
     'graphene_django'
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'fadhila.schema.SCHEMA',
+    'SCHEMA': 'messenger.schema.SCHEMA',
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'fadhila.urls'
+ROOT_URLCONF = 'messenger.urls'
 
 TEMPLATES = [
     {
@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'fadhila.wsgi.application'
+WSGI_APPLICATION = 'messenger.wsgi.application'
 
 
 # Database

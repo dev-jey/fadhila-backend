@@ -5,7 +5,7 @@ from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
-from fadhila import settings
+from messenger import settings
 
 class UserManager(BaseUserManager):
     '''Overrides some methods in the base user manager
