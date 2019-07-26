@@ -28,8 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django_inlinecss',
     'corsheaders',
-    'authentication',
-    'messaging',
+    'messenger.apps.authentication',
+    'messenger.apps.messaging',
     'graphene_django'
 ]
 
@@ -140,7 +140,7 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'authentication.User'
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'https://text-messenger-app.herokuapp.com',
+    'https://fadhila.herokuapp.com',
     'http://localhost:3000',
 )
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']

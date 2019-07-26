@@ -1,13 +1,12 @@
 '''The main schema that houses all the apps in the project'''
 import graphene
 import graphql_jwt
-import messaging.schema
-import authentication.schema
-from authentication.objects import UserType
-from authentication.schema import USER_VALIDATOR
+from messenger.apps.messaging import schema as messaging_schema
+from messenger.apps.authentication import schema as auth_schema
+from messenger.apps.authentication.objects import UserType
 
-class Query(messaging.schema.Query,
-            authentication.schema.Query,
+class Query(messaging_schema.Query,
+            auth_schema.Query,
             graphene.ObjectType):
     '''Registers all the queries in each app's schema'''
     pass
@@ -17,11 +16,11 @@ class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
     @classmethod
     def resolve(cls, root, info, **kwargs):
-        email = USER_VALIDATOR.clean_email(kwargs.get('email'))
-        USER_VALIDATOR.check_active_and_verified_status(email)
+        email = auth_schema.USER_VALIDATOR.clean_email(kwargs.get('email'))
+        auth_schema.USER_VALIDATOR.check_active_and_verified_status(email)
         return cls(user=info.context.user)
 
-class Mutation(authentication.schema.Mutation,
+class Mutation(auth_schema.Mutation,
                graphene.ObjectType):
     '''Registers all the mutations in each app's schema'''
     #jwt token auth, verify_token and refresh token mutations
