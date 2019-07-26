@@ -12,7 +12,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 
 #Local imports
-from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
+from fadhila.tokens import ACCOUNT_ACTIVATION_TOKEN
 from .objects import UserType
 from .models import User
 from .helpers import UserValidations

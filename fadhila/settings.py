@@ -28,13 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django_inlinecss',
     'corsheaders',
-    'authentication',
-    'messaging',
+    'apps.authentication',
+    'apps.messaging',
     'graphene_django'
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'messenger.schema.SCHEMA',
+    'SCHEMA': 'fadhila.schema.SCHEMA',
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'messenger.urls'
+ROOT_URLCONF = 'fadhila.urls'
 
 TEMPLATES = [
     {
@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'messenger.wsgi.application'
+WSGI_APPLICATION = 'fadhila.wsgi.application'
 
 
 # Database
@@ -140,7 +140,7 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'authentication.User'
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'https://text-messenger-app.herokuapp.com',
+    'https://fadhila.herokuapp.com',
     'http://localhost:3000',
 )
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
