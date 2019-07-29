@@ -2,6 +2,6 @@
 from django.apps import AppConfig
 
 
-class MessagingConfig(AppConfig):
+class CardsConfig(AppConfig):
     '''Defines the app name for this configuration'''
-    name = 'messaging'
+    name = 'cards'

@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'django_inlinecss',
     'corsheaders',
     'messenger.apps.authentication',
-    'messenger.apps.messaging',
+    'messenger.apps.cards',
     'graphene_django'
 ]
 
