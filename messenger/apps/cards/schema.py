@@ -24,7 +24,8 @@ class Query(graphene.AbstractType):
             raise GraphQLError("No available cards")
         return cards
 
-
+#THIS MUTATION IS NOT IN USE ANY MORE SINCE
+#THERE IS A CELERY JOB FOR THIS!!!!!!!!!!!!!!!!
 class CreateCard(graphene.Mutation):
     '''Defines all the cards mutations'''
     card = graphene.Field(CardType)
@@ -54,4 +55,4 @@ class CreateCard(graphene.Mutation):
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
-    create_card = CreateCard.Field()
+    # create_card = CreateCard.Field()
