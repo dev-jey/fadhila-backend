@@ -1,6 +1,7 @@
 '''Cards app schema'''
 import graphene
 import uuid
+from django.db.models import Q
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
 from .objects import CardType, CardPaginatedType
@@ -13,14 +14,22 @@ class Query(graphene.AbstractType):
     def __init__(self):
         pass
 
-    all_cards = graphene.Field(CardPaginatedType, page=graphene.Int())
+    all_cards = graphene.Field(CardPaginatedType, page=graphene.Int(),
+                               search=graphene.String())
 
-    @login_required
-    def resolve_all_cards(self, info, page):
+    # @login_required
+    def resolve_all_cards(self, info, page, search=None):
         '''Resolves all the cards'''
+        page_size = 30
+        if search:
+            filter = (
+                Q(serial__icontains=search)
+            )
+            cards = Card.objects.filter(filter)  
+            count = cards.count()
+            return get_paginator(cards, count, page_size, page, CardPaginatedType)
         cards = Card.objects.all()
         count = cards.count()
-        page_size = 30
         return get_paginator(cards, count, page_size, page, CardPaginatedType)
 
 #THIS MUTATION IS NOT IN USE ANY MORE SINCE
