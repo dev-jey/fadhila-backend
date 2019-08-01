@@ -3,9 +3,17 @@ from django.db import models
 from messenger.apps.authentication.models import User
 # Create your models here.
 
+
 class Card(models.Model):
     '''Defines attributes of the card model'''
     serial = models.CharField(max_length=100)
+    STATUS_CHOICES = (
+        (0, 'Pending'),
+        (1, 'Bought'),
+    )
+    status = models.IntegerField(null=False,
+                              default=STATUS_CHOICES[0][0],
+                              choices=STATUS_CHOICES)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -2,10 +2,10 @@
 import graphene
 import uuid
 from graphql import GraphQLError
-from graphene_django.filter import DjangoFilterConnectionField
 from graphql_extensions.auth.decorators import login_required
-from .objects import CardType
+from .objects import CardType, CardPaginatedType
 from .models import Card
+from .utils import get_paginator
 
 
 class Query(graphene.AbstractType):
@@ -13,16 +13,15 @@ class Query(graphene.AbstractType):
     def __init__(self):
         pass
 
-    card = graphene.Field(CardType)
-    all_cards = DjangoFilterConnectionField(CardType)
+    all_cards = graphene.Field(CardPaginatedType, page=graphene.Int())
 
     @login_required
-    def resolve_all_cards(self, info, **kwargs):
+    def resolve_all_cards(self, info, page):
         '''Resolves all the cards'''
         cards = Card.objects.all()
-        if not cards:
-            raise GraphQLError("No available cards")
-        return cards
+        count = cards.count()
+        page_size = 30
+        return get_paginator(cards, count, page_size, page, CardPaginatedType)
 
 #THIS MUTATION IS NOT IN USE ANY MORE SINCE
 #THERE IS A CELERY JOB FOR THIS!!!!!!!!!!!!!!!!

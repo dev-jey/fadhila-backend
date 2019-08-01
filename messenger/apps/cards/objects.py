@@ -1,5 +1,6 @@
 '''Defines the card type object'''
 from graphene import Node
+import graphene
 from graphene_django.types import DjangoObjectType
 from .models import Card
 
@@ -17,3 +18,11 @@ class CardType(DjangoObjectType):
             "created_at":["exact"],
             "updated_at":["exact"]
         }
+
+class CardPaginatedType(graphene.ObjectType):
+    count = graphene.Int()
+    page = graphene.Int()
+    pages = graphene.Int()
+    has_next = graphene.Boolean()
+    has_prev = graphene.Boolean()
+    cards = graphene.List(CardType)
