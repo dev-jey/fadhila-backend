@@ -6,7 +6,7 @@ from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
 from .objects import CardType, CardPaginatedType
 from .models import Card
-from .utils import get_paginator
+from .utils import get_paginator, cards_getter_helper
 
 
 class Query(graphene.AbstractType):
@@ -15,28 +15,35 @@ class Query(graphene.AbstractType):
         pass
 
     all_cards = graphene.Field(CardPaginatedType, page=graphene.Int(),
-                               search=graphene.String())
+                               search=graphene.String(), status=graphene.Int())
 
-    # @login_required
-    def resolve_all_cards(self, info, page, search=None):
+    @login_required
+    def resolve_all_cards(self, info, page, search=None, status=None):
         '''Resolves all the cards'''
-        page_size = 30
         if search:
             filter = (
                 Q(serial__icontains=search)
             )
-            cards = Card.objects.filter(filter)  
-            count = cards.count()
-            return get_paginator(cards, count, page_size, page, CardPaginatedType)
+            cards = Card.objects.filter(filter)
+            return cards_getter_helper(page, cards)
+        if status == 2:
+            cards = Card.objects.filter(owner__isnull=False)
+            return cards_getter_helper(page, cards)
+        if status == 0:
+            cards = Card.objects.filter(owner__isnull=True)
+            return cards_getter_helper(page, cards)
         cards = Card.objects.all()
-        count = cards.count()
-        return get_paginator(cards, count, page_size, page, CardPaginatedType)
+        return cards_getter_helper(page, cards)
 
-#THIS MUTATION IS NOT IN USE ANY MORE SINCE
-#THERE IS A CELERY JOB FOR THIS!!!!!!!!!!!!!!!!
+
+# THIS MUTATION IS NOT IN USE ANY MORE SINCE
+# THERE IS A CELERY JOB FOR THIS!!!!!!!!!!!!!!!!
+
+
 class CreateCard(graphene.Mutation):
     '''Defines all the cards mutations'''
     card = graphene.Field(CardType)
+
     class Arguments:
         '''Lists the arguments required 
         in generating cards'''
@@ -52,7 +59,7 @@ class CreateCard(graphene.Mutation):
                 # get a random string in a UUID fromat
                 randomString = uuid.uuid4().hex
                 # convert it in a uppercase letter and trim to your size.
-                serial  = randomString.upper()[0:stringLength]
+                serial = randomString.upper()[0:stringLength]
                 card = Card(
                     serial=serial
                 )
@@ -60,6 +67,7 @@ class CreateCard(graphene.Mutation):
             return CreateCard(card=card)
         except BaseException as e:
             raise GraphQLError('Error generating cards', e)
+
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''

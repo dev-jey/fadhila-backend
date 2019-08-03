@@ -1,4 +1,5 @@
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from .objects import CardPaginatedType
 
 # First we create a little helper function, becase we will potentially have many PaginatedTypes 
 # and we will potentially want to turn many querysets into paginated results:
@@ -20,3 +21,8 @@ def get_paginator(qs, count, page_size, page, paginated_type, **kwargs):
         cards=page_obj.object_list,
         **kwargs
     )
+
+def cards_getter_helper(page, cards):
+    page_size = 30
+    count = cards.count()
+    return get_paginator(cards, count, page_size, page, CardPaginatedType)
