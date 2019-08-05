@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'messenger.apps.authentication',
     'messenger.apps.cards',
+    'messenger.apps.orders',
+    'messenger.apps.address',
     'graphene_django'
 ]
 

@@ -2,27 +2,21 @@
 from graphene import Node
 import graphene
 from graphene_django.types import DjangoObjectType
-from .models import Card
+from .models import Orders
 
 
-class CardType(DjangoObjectType):
+class OrderType(DjangoObjectType):
     '''Defines the attributes to be in the type'''
     class Meta:
         '''Specifies some meta data such
          as filtering options'''
-        model = Card
+        model = Orders
         interfaces = (Node, )
-        filter_fields = {
-            "order": ["exact"],
-            "serial": ["icontains", "istartswith"],
-            "created_at":["exact"],
-            "updated_at":["exact"]
-        }
 
-class CardPaginatedType(graphene.ObjectType):
+class OrdersPaginatedType(graphene.ObjectType):
     count = graphene.Int()
     page = graphene.Int()
     pages = graphene.Int()
     has_next = graphene.Boolean()
     has_prev = graphene.Boolean()
-    items = graphene.List(CardType)
+    items = graphene.List(OrderType)

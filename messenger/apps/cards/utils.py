@@ -18,11 +18,11 @@ def get_paginator(qs, count, page_size, page, paginated_type, **kwargs):
         pages=p.num_pages,
         has_next=page_obj.has_next(),
         has_prev=page_obj.has_previous(),
-        cards=page_obj.object_list,
+        items=page_obj.object_list,
         **kwargs
     )
 
-def cards_getter_helper(page, cards):
+def items_getter_helper(page, items, paginatedType):
     page_size = 30
-    count = cards.count()
-    return get_paginator(cards, count, page_size, page, CardPaginatedType)
+    count = items.count()
+    return get_paginator(items, count, page_size, page, paginatedType)

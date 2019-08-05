@@ -6,7 +6,7 @@ from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
 from .objects import CardType, CardPaginatedType
 from .models import Card
-from .utils import get_paginator, cards_getter_helper
+from .utils import get_paginator, items_getter_helper
 
 
 class Query(graphene.AbstractType):
@@ -25,15 +25,15 @@ class Query(graphene.AbstractType):
                 Q(serial__icontains=search)
             )
             cards = Card.objects.filter(filter)
-            return cards_getter_helper(page, cards)
+            return items_getter_helper(page, cards, CardPaginatedType)
         if status == 2:
-            cards = Card.objects.filter(owner__isnull=False)
-            return cards_getter_helper(page, cards)
+            cards = Card.objects.filter(order__isnull=False)
+            return items_getter_helper(page, cards, CardPaginatedType)
         if status == 0:
-            cards = Card.objects.filter(owner__isnull=True)
-            return cards_getter_helper(page, cards)
+            cards = Card.objects.filter(order__isnull=True)
+            return items_getter_helper(page, cards, CardPaginatedType)
         cards = Card.objects.all()
-        return cards_getter_helper(page, cards)
+        return items_getter_helper(page, cards, CardPaginatedType)
 
 
 # THIS MUTATION IS NOT IN USE ANY MORE SINCE

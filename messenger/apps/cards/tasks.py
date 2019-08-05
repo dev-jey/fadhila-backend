@@ -39,6 +39,6 @@ def task_create_random_serials():
 
 
 def check_available_cards():
-    return Card.objects.filter(owner__isnull=True).count()
+    return Card.objects.filter(order__isnull=True).count()
 
 
