@@ -30,7 +30,9 @@ INSTALLED_APPS = [
     'django_inlinecss',
     'corsheaders',
     'messenger.apps.authentication',
-    'messenger.apps.messaging',
+    'messenger.apps.cards',
+    'messenger.apps.orders',
+    'messenger.apps.address',
     'graphene_django'
 ]
 
@@ -139,11 +141,15 @@ STATICFILES_DIRS = (
 )
 
 AUTH_USER_MODEL = 'authentication.User'
+
+#CORS settings
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
     'fadhila.herokuapp.com',
     'localhost:3000',
 )
+
+#Email sending stuff
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
 EMAIL_HOST = os.environ['EMAIL_HOST']
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
@@ -151,3 +157,11 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 
 django_heroku.settings(locals())
+
+# CELERY STUFF
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Nairobi'
