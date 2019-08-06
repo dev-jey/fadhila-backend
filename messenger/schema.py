@@ -4,11 +4,13 @@ import graphql_jwt
 from messenger.apps.cards import schema as cards_schema
 from messenger.apps.authentication import schema as auth_schema
 from messenger.apps.orders import schema as orders_schema
+from messenger.apps.address import schema as address_schema
 from messenger.apps.authentication.objects import UserType
 
 class Query(cards_schema.Query,
             auth_schema.Query,
             orders_schema.Query,
+            address_schema.Query,
             graphene.ObjectType):
     '''Registers all the queries in each app's schema'''
     pass

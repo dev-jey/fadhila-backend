@@ -1,7 +1,7 @@
 '''Model for orders'''
 from django.db import models
 from messenger.apps.authentication.models import User
-from messenger.apps.address.models import Address
+from messenger.apps.address.models import Town
 
 # Create your models here.
 
@@ -15,8 +15,11 @@ class Orders(models.Model):
         )
     tracking_number = models.CharField(max_length=100)
     payment_status = models.IntegerField(null=True)
-    address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True)
-    amount_due = models.FloatField()
+    town = models.ForeignKey(Town, on_delete=models.CASCADE, null=True)
+    cost_of_cards = models.FloatField()
+    transport_fee = models.FloatField()
+    total_cost = models.FloatField()
+    no_of_cards = models.IntegerField()
     delivery_status = models.IntegerField(null=False,
                                           default=STATUS_CHOICES[0][0],
                                           choices=STATUS_CHOICES)
