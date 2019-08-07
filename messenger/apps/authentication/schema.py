@@ -2,6 +2,7 @@
 # Third party imports
 import os
 import graphene
+import graphql_social_auth
 from graphql import GraphQLError
 from django.core.exceptions import ObjectDoesNotExist
 from graphql_extensions.auth.decorators import login_required
@@ -256,6 +257,7 @@ class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     activate_user = ActivateUser.Field()
     reset_password = ResetPassword.Field()
+    social_auth = graphql_social_auth.SocialAuth.Field()
     update_password = UpdatePassword.Field()
     update_profile = UpdateProfile.Field()
     deactivate_account = DeactivateAccount.Field()
