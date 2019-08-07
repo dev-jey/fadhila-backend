@@ -13,9 +13,9 @@ class UserValidations(object):
     '''Validations for the user email, username and password'''
     def validate_entered_data(self, kwargs):
         '''Runs all the validations in one function'''
-        input_username = kwargs.get('username')
-        input_email = kwargs.get('email')
-        input_password = kwargs.get('password')
+        input_username = kwargs.get('username', None)
+        input_email = kwargs.get('email', None)
+        input_password = kwargs.get('password', None)
         self.check_empty_fields(input_username, input_email, input_password)
         email = self.clean_email(input_email)
         username = self.clean_username(input_username)

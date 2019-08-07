@@ -20,7 +20,7 @@ class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
     @classmethod
     def resolve(cls, root, info, **kwargs):
-        email = auth_schema.USER_VALIDATOR.clean_email(kwargs.get('email'))
+        email = auth_schema.USER_VALIDATOR.clean_email(kwargs.get('email', None))
         auth_schema.USER_VALIDATOR.check_active_and_verified_status(email)
         return cls(user=info.context.user)
 
