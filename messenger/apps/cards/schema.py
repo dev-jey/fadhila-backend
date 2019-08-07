@@ -54,7 +54,7 @@ class CreateCard(graphene.Mutation):
         '''Generate random x number of cards'''
         try:
             stringLength = 6
-            no_of_cards = kwargs.get('no_of_cards')
+            no_of_cards = kwargs.get('no_of_cards', None)
             for i in range(no_of_cards):
                 # get a random string in a UUID fromat
                 randomString = uuid.uuid4().hex
