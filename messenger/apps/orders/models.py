@@ -7,29 +7,25 @@ from messenger.apps.address.models import Town
 
 
 class Orders(models.Model):
-    '''Defines attributes of the card model'''
-    STATUS_CHOICES = (
-        (0, 'Pending'),
-        (1, 'OnMyWay'),
-        (2, 'Delivered'),
-        )
+    '''Defines attributes of the order model'''
     tracking_number = models.CharField(max_length=100)
-    payment_status = models.IntegerField(null=True)
     town = models.ForeignKey(Town, on_delete=models.CASCADE, null=True)
-    cost_of_cards = models.FloatField()
-    transport_fee = models.FloatField()
-    total_cost = models.FloatField()
-    no_of_cards = models.IntegerField()
-    delivery_status = models.IntegerField(null=False,
-                                          default=STATUS_CHOICES[0][0],
-                                          choices=STATUS_CHOICES)
+    cost_of_cards = models.FloatField(default=0)
+    transport_fee = models.FloatField(default=0)
+    total_cost = models.FloatField(default=0)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    receiver_fname = models.CharField(max_length=100, null=True)
+    receiver_lname = models.CharField(max_length=100, null=True)
+    total_no_of_card_batches = models.IntegerField(default=0)
+    mobile_no = models.IntegerField(default=0)
+    no_of_regular_batches = models.IntegerField(default=0)
+    no_of_premium_batches = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         '''Defines the ordering of the
-         cards if retrieved'''
+         orders if retrieved'''
         ordering = ('created_at',)
 
     def __str__(self):

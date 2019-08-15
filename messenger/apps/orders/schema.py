@@ -17,21 +17,10 @@ class Query(graphene.AbstractType):
 
     # all_users_by_address = graphene.Field(UserType, town=graphene.Int())
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(),
-                               search=graphene.String(), town=graphene.Int(),
-                               delivery_status=graphene.Int())
-    
+                               search=graphene.String(), town=graphene.Int(), 
+                               date_from=graphene.String(), to=graphene.String()
+                               )
 
-    # @login_required
-    # def resolve_all_users_by_address(self, info, town):
-    #     '''Resolves all users by address'''
-    #     if town:
-    #         orders = Orders.objects.filter(town=town)
-    #         if not orders:
-    #             return GraphQLError("There are no orders from this region yet")
-    #         return orders
-    #     orders = Orders.objects.all()
-    #     for order in orders:
-    #         return order.owner
 
     @login_required
     def resolve_all_orders(self, info, page, town=None, search=None, delivery_status=None):
