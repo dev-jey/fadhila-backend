@@ -4,6 +4,8 @@ import uuid
 from django.db.models import Q
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
+from datetime import timedelta
+from django.utils import timezone
 from .objects import CardType, CardPaginatedType
 from .models import Card
 from .utils import get_paginator, items_getter_helper
@@ -27,12 +29,15 @@ class Query(graphene.AbstractType):
             cards = Card.objects.filter(filter)
             return items_getter_helper(page, cards, CardPaginatedType)
         if status == 2:
-            cards = Card.objects.filter(order__isnull=False)
+            cards = Card.objects.all()
             return items_getter_helper(page, cards, CardPaginatedType)
         if status == 0:
-            cards = Card.objects.filter(order__isnull=True)
+            cards = Card.objects.filter(
+                created_at__gte = timezone.now() - timedelta(days=30)
+            )
             return items_getter_helper(page, cards, CardPaginatedType)
-        cards = Card.objects.all()
+        cards = Card.objects.filter(
+                created_at__gte = timezone.now() - timedelta(days=1))
         return items_getter_helper(page, cards, CardPaginatedType)
 
 
