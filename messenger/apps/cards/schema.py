@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.utils import timezone
 from .objects import CardType, CardPaginatedType
 from .models import Card
-from .utils import get_paginator, items_getter_helper
+# from .utils import get_paginator, items_getter_helper
 
 
 class Query(graphene.AbstractType):
@@ -16,29 +16,44 @@ class Query(graphene.AbstractType):
     def __init__(self):
         pass
 
-    all_cards = graphene.Field(CardPaginatedType, page=graphene.Int(),
-                               search=graphene.String(), status=graphene.Int())
+    all_cards = graphene.List(CardType,
+                               search=graphene.String(), status=graphene.Int(),
+                               filters=graphene.Int())
 
     @login_required
-    def resolve_all_cards(self, info, page, search=None, status=None):
+    def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
+        search = kwargs.get('search', None)
         if search:
             filter = (
                 Q(serial__icontains=search)
             )
             cards = Card.objects.filter(filter)
-            return items_getter_helper(page, cards, CardPaginatedType)
-        if status == 2:
-            cards = Card.objects.all()
-            return items_getter_helper(page, cards, CardPaginatedType)
-        if status == 0:
-            cards = Card.objects.filter(
-                created_at__gte = timezone.now() - timedelta(days=30)
-            )
-            return items_getter_helper(page, cards, CardPaginatedType)
+            return cards
+        check_other_filters(kwargs)
         cards = Card.objects.filter(
                 created_at__gte = timezone.now() - timedelta(days=1))
-        return items_getter_helper(page, cards, CardPaginatedType)
+        return cards
+    
+def check_other_filters(kwargs):
+    status = kwargs.get('status', None)
+    filters = kwargs.get('filters', None)
+    cards = None
+    if status == 2:
+        cards = Card.objects.all()
+    if status == 0:
+        cards = Card.objects.filter(
+            created_at__gte = timezone.now() - timedelta(days=30)
+        )
+    if filters == 2:
+        cards = Card.objects.filter(owner__isnull=True)
+    if filters == 0:
+        cards = Card.objects.filter(
+            owner__isnull = False
+        )
+    return cards
+
+
 
 
 # THIS MUTATION IS NOT IN USE ANY MORE SINCE

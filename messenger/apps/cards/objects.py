@@ -13,7 +13,7 @@ class CardType(DjangoObjectType):
         model = Card
         interfaces = (Node, )
         filter_fields = {
-            "order": ["exact"],
+            "owner": ["exact"],
             "serial": ["icontains", "istartswith"],
             "created_at":["exact"],
             "updated_at":["exact"]
