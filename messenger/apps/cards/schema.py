@@ -17,43 +17,36 @@ class Query(graphene.AbstractType):
         pass
 
     all_cards = graphene.List(CardType,
-                               search=graphene.String(), status=graphene.Int(),
-                               filters=graphene.Int())
+                              search=graphene.String(), owner=graphene.Boolean(),
+                              from_date=graphene.String(), to=graphene.String())
 
     @login_required
     def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
         search = kwargs.get('search', None)
+        filter = (
+                Q(serial__icontains='')
+            )
         if search:
             filter = (
                 Q(serial__icontains=search)
             )
-            cards = Card.objects.filter(filter)
-            return cards
-        check_other_filters(kwargs)
-        cards = Card.objects.filter(
-                created_at__gte = timezone.now() - timedelta(days=1))
+        cards = check_other_filters(kwargs, filter)
         return cards
-    
-def check_other_filters(kwargs):
-    status = kwargs.get('status', None)
-    filters = kwargs.get('filters', None)
+
+
+def check_other_filters(kwargs, filter):
+    owner = kwargs.get('owner')
+    from_date = kwargs.get('from_date', None)
+    to = kwargs.get('to', None)
     cards = None
-    if status == 2:
-        cards = Card.objects.all()
-    if status == 0:
-        cards = Card.objects.filter(
-            created_at__gte = timezone.now() - timedelta(days=30)
-        )
-    if filters == 2:
-        cards = Card.objects.filter(owner__isnull=True)
-    if filters == 0:
-        cards = Card.objects.filter(
-            owner__isnull = False
-        )
+    if from_date > to:
+        raise GraphQLError('Starting date must be less than final date')
+    if from_date == to:
+        cards = Card.objects.filter(filter).filter(created_at__date=from_date).filter(owner__isnull=owner)
+    else:
+        cards = Card.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(owner__isnull=owner)
     return cards
-
-
 
 
 # THIS MUTATION IS NOT IN USE ANY MORE SINCE
