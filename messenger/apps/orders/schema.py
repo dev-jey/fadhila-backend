@@ -15,31 +15,40 @@ class Query(graphene.AbstractType):
     def __init__(self):
         pass
 
-    # all_users_by_address = graphene.Field(UserType, town=graphene.Int())
-    all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(),
-                               search=graphene.String(), town=graphene.Int(), 
-                               date_from=graphene.String(), to=graphene.String()
+    all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
+                               search=graphene.String(), is_cancelled=graphene.Boolean(),
+                               from_date=graphene.String(), to=graphene.String()
                                )
 
 
-    @login_required
-    def resolve_all_orders(self, info, page, town=None, search=None, delivery_status=None):
+    # @login_required
+    def resolve_all_orders(self, info, **kwargs):
         '''Resolves all the orders'''
-        if town:
-            orders = Orders.objects.filter(town=town)
-            return items_getter_helper(page, orders, OrdersPaginatedType)
-        if delivery_status is not None:
-            orders = Orders.objects.filter(delivery_status=delivery_status)
-            return items_getter_helper(page, orders, OrdersPaginatedType)
+        search = kwargs.get('search', None)
+        page = kwargs.get('page', None)
+        get_all = kwargs.get('get_all')
+        filter = (
+                Q(tracking_number__icontains='')
+            )
         if search:
-            try:
-                user = User.objects.get(username=search)
-                filter = (
-                    Q(owner=user.id)
-                )
-                orders = Orders.objects.filter(filter)
-                return items_getter_helper(page, orders, OrdersPaginatedType)
-            except Exception:
-                return GraphQLError("User not found")
-        orders = Orders.objects.filter(town=town)
+            filter = (
+                Q(tracking_number__icontains=search)
+            )
+        orders = check_other_filters(kwargs, filter)
+        if get_all:
+            orders = Orders.objects.all().order_by('address__town_name')
         return items_getter_helper(page, orders, OrdersPaginatedType)
+
+
+def check_other_filters(kwargs, filter):
+    from_date = kwargs.get('from_date', None)
+    to = kwargs.get('to', None)
+    isCancelled = kwargs.get('is_cancelled')
+    orders = None
+    if from_date > to:
+        raise GraphQLError('Starting date must be less than final date')
+    if from_date == to:
+        orders = Orders.objects.filter(filter).filter(created_at__date=from_date).filter(is_cancelled=isCancelled).order_by('address__town_name')
+    else:
+        orders = Orders.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(is_cancelled=isCancelled).order_by('address__town_name')
+    return orders

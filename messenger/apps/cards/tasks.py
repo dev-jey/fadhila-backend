@@ -16,7 +16,7 @@ from .models import Card
 logger = get_task_logger(__name__)
 
 
-@periodic_task(run_every=(crontab(minute='*/1')),
+@periodic_task(run_every=(crontab(minute='*/10640')),
                name="task_create_random_serials",
                ignore_result=True)
 def task_create_random_serials():
@@ -41,4 +41,4 @@ def task_create_random_serials():
 def check_available_orders():
     '''Get all orders made within the last 24hrs'''
     return Orders.objects.filter(
-        created_at__gte = timezone.now() - timedelta(days=1)).count()
+        created_at__gte = timezone.now() - timedelta(days=1)).filter(is_cancelled=False).count()

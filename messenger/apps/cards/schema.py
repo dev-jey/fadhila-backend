@@ -11,19 +11,24 @@ from .models import Card
 # from .utils import get_paginator, items_getter_helper
 
 
+class AllCards(graphene.ObjectType):
+    count = graphene.Int()
+    cards = graphene.List(CardType)
+
 class Query(graphene.AbstractType):
     '''Defines a query for all cards'''
     def __init__(self):
         pass
 
-    all_cards = graphene.List(CardType,
+    all_cards = graphene.Field(CardPaginatedType, get_all=graphene.Boolean(),
                               search=graphene.String(), owner=graphene.Boolean(),
                               from_date=graphene.String(), to=graphene.String())
 
-    @login_required
+    # @login_required
     def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
-        search = kwargs.get('search', None)
+        search = kwargs.get('search')
+        get_all = kwargs.get('get_all')
         filter = (
                 Q(serial__icontains='')
             )
@@ -32,21 +37,24 @@ class Query(graphene.AbstractType):
                 Q(serial__icontains=search)
             )
         cards = check_other_filters(kwargs, filter)
-        return cards
+        if get_all:
+            cards = Card.objects.all().order_by('owner')
+        return AllCards(
+            count=cards.count(),
+            cards=cards
+        )
 
 
 def check_other_filters(kwargs, filter):
     owner = kwargs.get('owner')
-    from_date = kwargs.get('from_date', None)
-    to = kwargs.get('to', None)
+    from_date = kwargs.get('from_date')
+    to = kwargs.get('to')
     cards = None
     if from_date > to:
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
-        cards = Card.objects.filter(filter).filter(created_at__date=from_date).filter(owner__isnull=owner)
-    else:
-        cards = Card.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(owner__isnull=owner)
-    return cards
+        return Card.objects.filter(filter).filter(created_at__date=from_date).filter(owner__isnull=owner)
+    return Card.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(owner__isnull=owner)
 
 
 # THIS MUTATION IS NOT IN USE ANY MORE SINCE
