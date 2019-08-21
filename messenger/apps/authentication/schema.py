@@ -81,6 +81,7 @@ class CreateUser(graphene.Mutation):
             email=user_data['email'],
         )
         new_user.set_password(user_data['password'])
+        new_user.is_verified=False
         new_user.save()
         try:
             message = render_to_string('send_activate_email.html', {
@@ -251,13 +252,23 @@ class DeactivateAccount(graphene.Mutation):
         except ObjectDoesNotExist:
             raise GraphQLError("The user does not exist")
 
+class SocialAuth(graphql_social_auth.SocialAuthMutation):
+    
+    user = graphene.Field(UserType)
+    token = graphene.String()
+
+    @classmethod
+    def resolve(cls, root, info, social, **kwargs):
+        token = TOKEN_GENERATOR.generate(social.user.email)
+        return cls(user=social.user, token=token)
+
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     create_user = CreateUser.Field()
     activate_user = ActivateUser.Field()
     reset_password = ResetPassword.Field()
-    social_auth = graphql_social_auth.SocialAuth.Field()
+    social_auth = SocialAuth.Field()
     update_password = UpdatePassword.Field()
     update_profile = UpdateProfile.Field()
     deactivate_account = DeactivateAccount.Field()
