@@ -4,36 +4,57 @@ import uuid
 from django.db.models import Q
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
+from datetime import timedelta
+from django.utils import timezone
 from .objects import CardType, CardPaginatedType
 from .models import Card
-from .utils import get_paginator, items_getter_helper
+# from .utils import get_paginator, items_getter_helper
 
+
+class AllCards(graphene.ObjectType):
+    count = graphene.Int()
+    cards = graphene.List(CardType)
 
 class Query(graphene.AbstractType):
     '''Defines a query for all cards'''
     def __init__(self):
         pass
 
-    all_cards = graphene.Field(CardPaginatedType, page=graphene.Int(),
-                               search=graphene.String(), status=graphene.Int())
+    all_cards = graphene.Field(CardPaginatedType, get_all=graphene.Boolean(),
+                              search=graphene.String(), owner=graphene.Boolean(),
+                              from_date=graphene.String(), to=graphene.String())
 
-    @login_required
-    def resolve_all_cards(self, info, page, search=None, status=None):
+    # @login_required
+    def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
+        search = kwargs.get('search')
+        get_all = kwargs.get('get_all')
+        filter = (
+                Q(serial__icontains='')
+            )
         if search:
             filter = (
                 Q(serial__icontains=search)
             )
-            cards = Card.objects.filter(filter)
-            return items_getter_helper(page, cards, CardPaginatedType)
-        if status == 2:
-            cards = Card.objects.filter(order__isnull=False)
-            return items_getter_helper(page, cards, CardPaginatedType)
-        if status == 0:
-            cards = Card.objects.filter(order__isnull=True)
-            return items_getter_helper(page, cards, CardPaginatedType)
-        cards = Card.objects.all()
-        return items_getter_helper(page, cards, CardPaginatedType)
+        cards = check_other_filters(kwargs, filter)
+        if get_all:
+            cards = Card.objects.all().order_by('owner')
+        return AllCards(
+            count=cards.count(),
+            cards=cards
+        )
+
+
+def check_other_filters(kwargs, filter):
+    owner = kwargs.get('owner')
+    from_date = kwargs.get('from_date')
+    to = kwargs.get('to')
+    cards = None
+    if from_date > to:
+        raise GraphQLError('Starting date must be less than final date')
+    if from_date == to:
+        return Card.objects.filter(filter).filter(created_at__date=from_date).filter(owner__isnull=owner)
+    return Card.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(owner__isnull=owner)
 
 
 # THIS MUTATION IS NOT IN USE ANY MORE SINCE

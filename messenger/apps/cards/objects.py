@@ -13,7 +13,7 @@ class CardType(DjangoObjectType):
         model = Card
         interfaces = (Node, )
         filter_fields = {
-            "order": ["exact"],
+            "owner": ["exact"],
             "serial": ["icontains", "istartswith"],
             "created_at":["exact"],
             "updated_at":["exact"]
@@ -21,8 +21,4 @@ class CardType(DjangoObjectType):
 
 class CardPaginatedType(graphene.ObjectType):
     count = graphene.Int()
-    page = graphene.Int()
-    pages = graphene.Int()
-    has_next = graphene.Boolean()
-    has_prev = graphene.Boolean()
-    items = graphene.List(CardType)
+    cards = graphene.List(CardType)
