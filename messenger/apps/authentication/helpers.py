@@ -48,7 +48,7 @@ class UserValidations(object):
     def check_already_existing(self, username, email):
         '''Checks if the email or username is already existing'''
         try:
-            username_existing = User.objects.get(username=username)
+            username_existing = User.objects.get(username=username.casefold())
         except ObjectDoesNotExist:
             username_existing = None
 
@@ -93,12 +93,8 @@ class UserValidations(object):
         '''Checks if the details are already taken by another user
         before updating the current user info'''
         try:
-            username_existing = User.objects.get(username=username)
-            if username_existing and info.context.user != username_existing:
+            if User.objects.exclude(email=info.context.user.email).filter(username=username.casefold()).exists():
                 raise GraphQLError('Username already taken')
-            email_existing = User.objects.get(email=email)
-            if email_existing and info.context.user.email != email_existing.email:
-                raise GraphQLError('Email already taken')
         except ValidationError:
             return True
 
