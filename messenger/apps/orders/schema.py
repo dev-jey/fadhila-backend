@@ -2,6 +2,7 @@
 import graphene
 import uuid
 from django.db.models import Q
+from django.db.models import Sum
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
 from .objects import OrderType, OrdersPaginatedType
@@ -21,7 +22,7 @@ class Query(graphene.AbstractType):
                                )
 
 
-    # @login_required
+    @login_required
     def resolve_all_orders(self, info, **kwargs):
         '''Resolves all the orders'''
         search = kwargs.get('search', None)
@@ -37,7 +38,17 @@ class Query(graphene.AbstractType):
         orders = check_other_filters(kwargs, filter)
         if get_all:
             orders = Orders.objects.all().order_by('address__town_name')
-        return items_getter_helper(page, orders, OrdersPaginatedType)
+        premium = Orders.objects.filter(is_cancelled=False).aggregate(Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+        regular = Orders.objects.filter(is_cancelled=False).aggregate(Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+        total = premium + regular
+        transport_costs = Orders.objects.filter(is_cancelled=False).aggregate(Sum('transport_fee'))['transport_fee__sum']
+        total_cards_cost = Orders.objects.filter(is_cancelled=False).aggregate(Sum('cost_of_cards'))['cost_of_cards__sum']
+        total_revenue = Orders.objects.filter(is_cancelled=False).aggregate(Sum('total_cost'))['total_cost__sum']
+        return items_getter_helper(page, orders, OrdersPaginatedType, 
+        no_of_premium_batches=premium, no_of_regular_batches=regular,
+        total_transport_cost=transport_costs, total_cards_cost=total_cards_cost,
+        total_revenue=total_revenue,
+        total_no_of_batches=total)
 
 
 def check_other_filters(kwargs, filter):
