@@ -26,3 +26,8 @@ class OrdersPaginatedType(graphene.ObjectType):
     has_next = graphene.Boolean()
     has_prev = graphene.Boolean()
     items = graphene.List(OrderType)
+
+class StatsType(graphene.ObjectType):
+    users = graphene.Int()
+    revenue = graphene.Int()
+    orders = graphene.Int()

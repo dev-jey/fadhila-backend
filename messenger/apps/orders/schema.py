@@ -5,11 +5,15 @@ from django.db.models import Q
 from django.db.models import Sum
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
-from .objects import OrderType, OrdersPaginatedType
+from .objects import OrderType, OrdersPaginatedType, StatsType
 from messenger.apps.authentication.objects import UserType
 from .models import Orders, User
 from messenger.apps.cards.utils import get_paginator, items_getter_helper
 
+class Stats(graphene.ObjectType):
+    users = graphene.Int()
+    orders = graphene.Int()
+    revenue = graphene.Int()
 
 class Query(graphene.AbstractType):
     '''Defines a query for all orders'''
@@ -20,7 +24,15 @@ class Query(graphene.AbstractType):
                                search=graphene.String(), is_cancelled=graphene.Boolean(),
                                from_date=graphene.String(), to=graphene.String()
                                )
+    dashboard_stats = graphene.Field(StatsType)
 
+    @login_required
+    def resolve_dashboard_stats(self, info, **kwargs):
+        users = User.objects.all().count()
+        orders = Orders.objects.filter(is_cancelled=False).count()
+        revenue = Orders.objects.filter(is_cancelled=False).aggregate(Sum('total_cost'))['total_cost__sum']
+        print(users)
+        return Stats(users=users, orders=orders, revenue=revenue)
 
     @login_required
     def resolve_all_orders(self, info, **kwargs):
