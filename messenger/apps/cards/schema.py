@@ -89,7 +89,35 @@ class CreateCard(graphene.Mutation):
         except BaseException as e:
             raise GraphQLError('Error generating cards', e)
 
+class VerifyCard(graphene.Mutation):
+    count = graphene.Int()
+    card = graphene.Field(CardType)
+
+    class Arguments:
+        serial = graphene.String()
+
+    # @login_required
+    def mutate(self, info, **kwargs):
+        serial = kwargs.get('serial', None)
+        if not serial:
+            raise GraphQLError("Enter a serial no")
+        try:
+            card = Card.objects.get(serial=serial)
+            if card.owner is not None and card.owner.email != info.context.user.email:
+                return GraphQLError("This card already has an owner")
+            if card.owner is not None and card.owner.email == info.context.user.email:
+                return GraphQLError("This card has already been saved")
+            user = info.context.user.id
+            card.owner_id = user
+            card.save()
+            count = Card.objects.filter(owner=user).count()
+            return VerifyCard(card=card, count=count)
+        except BaseException:
+            raise GraphQLError("You have entered an invalid serial number")
+
+
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     # create_card = CreateCard.Field()
+    verify_card = VerifyCard.Field()
