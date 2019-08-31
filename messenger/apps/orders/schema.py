@@ -7,6 +7,8 @@ from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
 from .objects import OrderType, OrdersPaginatedType, StatsType
 from messenger.apps.authentication.objects import UserType
+from messenger.apps.cards.models import Card
+from messenger.apps.cards.objects import CardsDataType
 from .models import Orders, User
 from messenger.apps.cards.utils import get_paginator, items_getter_helper
 
@@ -26,12 +28,35 @@ class Query(graphene.AbstractType):
                                )
     dashboard_stats = graphene.Field(StatsType)
 
+    current_user_cards = graphene.Field(CardsDataType, page=graphene.Int())
+    current_user_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int())
+
+
+    @login_required
+    def resolve_current_user_cards(self, info, **kwargs):
+        page = kwargs.get('page')
+        current_user = info.context.user.id
+        try:
+            cards = Card.objects.filter(owner_id=current_user)
+            return items_getter_helper(page, cards, CardsDataType)
+        except BaseException as e:
+            raise GraphQLError("An error occured while fetching data")
+    
+    @login_required
+    def resolve_current_user_orders(self, info, **kwargs):
+        page = kwargs.get('page')
+        current_user = info.context.user.id
+        try:
+            orders = Orders.objects.filter(owner_id=current_user)
+            return items_getter_helper(page, orders, OrdersPaginatedType)
+        except BaseException as e:
+            raise GraphQLError("An error occured while fetching data")
+
     @login_required
     def resolve_dashboard_stats(self, info, **kwargs):
         users = User.objects.all().count()
         orders = Orders.objects.filter(is_cancelled=False).count()
         revenue = Orders.objects.filter(is_cancelled=False).aggregate(Sum('total_cost'))['total_cost__sum']
-        print(users)
         return Stats(users=users, orders=orders, revenue=revenue)
 
     @login_required

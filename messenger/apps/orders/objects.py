@@ -3,6 +3,7 @@ from graphene import Node
 import graphene
 from graphene_django.types import DjangoObjectType
 from .models import Orders
+from messenger.apps.cards.objects import CardsDataType
 
 
 class OrderType(DjangoObjectType):
