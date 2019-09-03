@@ -18,7 +18,6 @@ class OrdersPaginatedType(graphene.ObjectType):
     count = graphene.Int()
     no_of_premium_batches = graphene.Int()
     no_of_regular_batches = graphene.Int()
-    total_no_of_batches = graphene.Int()
     total_transport_cost = graphene.Float()
     total_cards_cost = graphene.Float()
     total_revenue = graphene.Float()

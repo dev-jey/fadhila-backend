@@ -29,11 +29,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django_inlinecss',
     'corsheaders',
+    'messenger.apps.country',
     'messenger.apps.authentication',
     'messenger.apps.cards',
-    'messenger.apps.orders',
     'messenger.apps.address',
+    'messenger.apps.orders',
     'graphene_django',
+    'django_countries',
     'social_django'
 ]
 

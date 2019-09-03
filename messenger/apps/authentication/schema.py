@@ -14,6 +14,7 @@ from django.template.loader import render_to_string
 
 # Local imports
 from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
+from messenger.apps.country.models import Country
 from .objects import UserType
 from .models import User
 from .helpers import UserValidations
@@ -183,6 +184,7 @@ class UpdateProfile(graphene.Mutation):
         email = graphene.String()
         bio = graphene.String()
         image = graphene.String()
+        country = graphene.String()
 
     @login_required
     def mutate(self, info, **kwargs):
@@ -191,6 +193,7 @@ class UpdateProfile(graphene.Mutation):
         email = kwargs.get('email')
         bio = kwargs.get('bio')
         image = kwargs.get('image')
+        country = kwargs.get('country')
         valid_username = USER_VALIDATOR.clean_username(username)
         valid_email = USER_VALIDATOR.clean_email(email)
         USER_VALIDATOR.check_already_existing_during_update(
@@ -201,6 +204,8 @@ class UpdateProfile(graphene.Mutation):
             user.username=valid_username
             user.bio=bio
             user.image=image
+            country_id = Country.objects.get(code=country)
+            user.country=country_id
             user.save()
             return UpdateProfile(user=user)
         except Exception as error:

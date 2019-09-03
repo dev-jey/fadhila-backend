@@ -24,7 +24,7 @@ class Query(graphene.AbstractType):
                               search=graphene.String(), owner=graphene.Boolean(),
                               from_date=graphene.String(), to=graphene.String())
 
-    # @login_required
+    @login_required
     def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
         search = kwargs.get('search')
@@ -96,7 +96,7 @@ class VerifyCard(graphene.Mutation):
     class Arguments:
         serial = graphene.String()
 
-    # @login_required
+    @login_required
     def mutate(self, info, **kwargs):
         serial = kwargs.get('serial', None)
         if not serial:

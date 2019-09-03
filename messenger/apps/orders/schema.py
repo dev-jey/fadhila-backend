@@ -77,15 +77,13 @@ class Query(graphene.AbstractType):
             orders = Orders.objects.all().order_by('address__town_name')
         premium = Orders.objects.filter(is_cancelled=False).aggregate(Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
         regular = Orders.objects.filter(is_cancelled=False).aggregate(Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        total = premium + regular
         transport_costs = Orders.objects.filter(is_cancelled=False).aggregate(Sum('transport_fee'))['transport_fee__sum']
         total_cards_cost = Orders.objects.filter(is_cancelled=False).aggregate(Sum('cost_of_cards'))['cost_of_cards__sum']
         total_revenue = Orders.objects.filter(is_cancelled=False).aggregate(Sum('total_cost'))['total_cost__sum']
         return items_getter_helper(page, orders, OrdersPaginatedType, 
         no_of_premium_batches=premium, no_of_regular_batches=regular,
         total_transport_cost=transport_costs, total_cards_cost=total_cards_cost,
-        total_revenue=total_revenue,
-        total_no_of_batches=total)
+        total_revenue=total_revenue)
 
 
 def check_other_filters(kwargs, filter):
