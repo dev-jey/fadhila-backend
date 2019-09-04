@@ -3,3 +3,5 @@ env
 .vscode
 __pycache__
 dump.rdb
+celerybeat.pid
+celerybeat-schedule
