@@ -63,6 +63,7 @@ class Query(graphene.AbstractType):
             cards = Card.objects.filter(owner_id=current_user)
             return items_getter_helper(page, cards, CardsDataType)
         except BaseException as e:
+            print(e)
             raise GraphQLError("An error occured while fetching cards")
 
     @login_required
@@ -73,6 +74,7 @@ class Query(graphene.AbstractType):
             orders = Orders.objects.filter(owner_id=current_user)
             return items_getter_helper(page, orders, OrdersPaginatedType)
         except BaseException as e:
+            print(e)
             raise GraphQLError("An error occured while fetching orders")
 
     @login_required
