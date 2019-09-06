@@ -22,7 +22,7 @@ def get_paginator(qs, count, page_size, page, paginated_type, **kwargs):
         **kwargs
     )
 
-def items_getter_helper(page, items, paginatedType):
+def items_getter_helper(page, items, paginatedType, **kwargs):
     page_size = 30
     count = items.count()
-    return get_paginator(items, count, page_size, page, paginatedType)
+    return get_paginator(items, count, page_size, page, paginatedType, **kwargs)

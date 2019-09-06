@@ -22,3 +22,11 @@ class CardType(DjangoObjectType):
 class CardPaginatedType(graphene.ObjectType):
     count = graphene.Int()
     cards = graphene.List(CardType)
+
+class CardsDataType(graphene.ObjectType):
+    count = graphene.Int()
+    page = graphene.Int()
+    pages = graphene.Int()
+    has_next = graphene.Boolean()
+    has_prev = graphene.Boolean()
+    items = graphene.List(CardType)

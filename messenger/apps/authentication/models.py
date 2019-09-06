@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
 from messenger import settings
+from messenger.apps.country.models import Country
 
 class UserManager(BaseUserManager):
     '''Overrides some methods in the base user manager
@@ -34,6 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(db_index=True, unique=True)
     is_deactivated = models.BooleanField(default=False)
     bio = models.TextField(blank=True)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True)
     image = models.TextField(
         "image",
         default="https://res.cloudinary.com/dw675k0f5/image/upload/v1564061781/storo/Screen_Shot_2019-07-25_at_16.35.29.png")

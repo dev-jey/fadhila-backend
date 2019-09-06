@@ -13,6 +13,7 @@ dj-database-url==0.5.0
 Django==2.2.3
 django-cors-headers==3.0.2
 django-cors-middleware==1.4.0
+django-countries==5.4
 django-filter==2.1.0
 django-graphql-extensions==0.0.6
 django-graphql-jwt==0.2.1

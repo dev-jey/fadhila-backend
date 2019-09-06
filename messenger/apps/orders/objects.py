@@ -2,7 +2,8 @@
 from graphene import Node
 import graphene
 from graphene_django.types import DjangoObjectType
-from .models import Orders
+from .models import Orders, Cart
+from messenger.apps.cards.objects import CardsDataType
 
 
 class OrderType(DjangoObjectType):
@@ -15,8 +16,24 @@ class OrderType(DjangoObjectType):
 
 class OrdersPaginatedType(graphene.ObjectType):
     count = graphene.Int()
+    no_of_premium_batches = graphene.Int()
+    no_of_regular_batches = graphene.Int()
+    total_transport_cost = graphene.Float()
+    total_cards_cost = graphene.Float()
+    total_revenue = graphene.Float()
     page = graphene.Int()
     pages = graphene.Int()
     has_next = graphene.Boolean()
     has_prev = graphene.Boolean()
     items = graphene.List(OrderType)
+
+class StatsType(graphene.ObjectType):
+    users = graphene.Int()
+    revenue = graphene.Int()
+    orders = graphene.Int()
+
+class CartType(DjangoObjectType):
+    'cart type definition'
+    class Meta:
+        model = Cart
+        interfaces = (Node, )

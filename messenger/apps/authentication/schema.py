@@ -14,6 +14,7 @@ from django.template.loader import render_to_string
 
 # Local imports
 from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
+from messenger.apps.country.models import Country
 from .objects import UserType
 from .models import User
 from .helpers import UserValidations
@@ -34,7 +35,6 @@ class Query(graphene.AbstractType):
     valid_link = graphene.Field(UserType,
                                 uidb64=graphene.String(),
                                 access_token=graphene.String())
-    profile = graphene.List(UserType, username=graphene.String())
     current_user = graphene.Field(UserType)
 
     def resolve_valid_link(self, info, **kwargs):
@@ -44,14 +44,6 @@ class Query(graphene.AbstractType):
         access_token = kwargs.get('access_token')
         user = validate_uid_and_token(uidb64, access_token)
         return user
-
-    @login_required
-    def resolve_profile(self, info, username):
-        '''Resolves the profile of the provided username'''
-        existing_profile = User.objects.filter(username=username)
-        if existing_profile:
-            return existing_profile
-        raise GraphQLError('User does not exist')
 
     @login_required
     def resolve_current_user(self, info):
@@ -188,41 +180,37 @@ class UpdateProfile(graphene.Mutation):
     class Arguments:
         '''Arguments that need to be passed in for an
         update to occur'''
-        id = graphene.Int()
         username = graphene.String()
         email = graphene.String()
-        is_deactivated = graphene.Boolean()
         bio = graphene.String()
         image = graphene.String()
+        country = graphene.String()
 
     @login_required
     def mutate(self, info, **kwargs):
         '''Gets the new user info and updates it in the db'''
-        user_id = kwargs.get('id')
         username = kwargs.get('username')
         email = kwargs.get('email')
-        is_deactivated = kwargs.get('is_deactivated')
         bio = kwargs.get('bio')
         image = kwargs.get('image')
+        country = kwargs.get('country')
         valid_username = USER_VALIDATOR.clean_username(username)
         valid_email = USER_VALIDATOR.clean_email(email)
-        if info.context.user.id != user_id:
-            raise GraphQLError("You can only update your own profile")
         USER_VALIDATOR.check_already_existing_during_update(
             info, valid_username, valid_email
         )
         try:
-            User.objects.filter(id=user_id).update(
-                username=valid_username,
-                email=valid_email,
-                bio=bio,
-                is_deactivated=is_deactivated,
-                image=image
-            )
-            existing_user = User.objects.get(id=user_id)
-            return UpdateProfile(user=existing_user)
+            user = User.objects.get(email=valid_email)
+            user.username=valid_username
+            user.bio=bio
+            user.image=image
+            country_id = Country.objects.get(code=country)
+            user.country=country_id
+            user.save()
+            return UpdateProfile(user=user)
         except Exception as error:
-            raise GraphQLError(error.messages)
+            raise GraphQLError('There has been an error updating your profile.' 
+            +' Try again later')
 
 
 class DeactivateAccount(graphene.Mutation):
