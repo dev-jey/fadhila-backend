@@ -28,6 +28,7 @@ class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
 class Mutation(auth_schema.Mutation,
                cards_schema.Mutation,
+               orders_schema.Mutation,
                graphene.ObjectType):
     '''Registers all the mutations in each app's schema'''
     #jwt token auth, verify_token and refresh token mutations

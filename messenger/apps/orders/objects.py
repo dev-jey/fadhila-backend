@@ -2,7 +2,7 @@
 from graphene import Node
 import graphene
 from graphene_django.types import DjangoObjectType
-from .models import Orders
+from .models import Orders, Cart
 from messenger.apps.cards.objects import CardsDataType
 
 
@@ -31,3 +31,9 @@ class StatsType(graphene.ObjectType):
     users = graphene.Int()
     revenue = graphene.Int()
     orders = graphene.Int()
+
+class CartType(DjangoObjectType):
+    'cart type definition'
+    class Meta:
+        model = Cart
+        interfaces = (Node, )
