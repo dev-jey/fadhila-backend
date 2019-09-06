@@ -209,7 +209,6 @@ class UpdateProfile(graphene.Mutation):
             user.save()
             return UpdateProfile(user=user)
         except Exception as error:
-            print(error)
             raise GraphQLError('There has been an error updating your profile.' 
             +' Try again later')
 

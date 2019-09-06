@@ -162,6 +162,7 @@ class AddToCart(graphene.Mutation):
             return AddToCart(cart=calculate_totals(existing_cart))
 
         except Exception as e:
+            print(e)
             raise GraphQLError('There has been an error updating your cart')
 
 
