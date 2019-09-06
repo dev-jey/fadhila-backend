@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     'messenger.apps.country',
     'messenger.apps.authentication',
     'messenger.apps.cards',
-    'messenger.apps.address',
     'messenger.apps.orders',
     'graphene_django',
     'django_countries',

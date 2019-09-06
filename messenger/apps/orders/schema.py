@@ -168,9 +168,40 @@ class AddToCart(graphene.Mutation):
             raise GraphQLError('There has been an error updating your cart')
 
 
+class UpdateCart(graphene.Mutation):
+    '''Update the Cart Details'''
+    # Returns the cart instance info
+    cart = graphene.Field(CartType)
+
+    class Arguments:
+        '''Takes in cart details as arguments'''
+        receiver_fname = graphene.String()
+        receiver_lname = graphene.String()
+        address = graphene.String()
+        mobile_no = graphene.Int()
+
+    @login_required
+    def mutate(self, info, **kwargs):
+        '''Add to cart mutation'''
+        try:
+            owner = info.context.user
+            existing_cart = Cart.objects.get(owner=owner)
+            existing_cart.receiver_fname = kwargs.get(
+                'receiver_fname', None).strip()
+            existing_cart.receiver_lname = kwargs.get(
+                'receiver_lname', None).strip()
+            existing_cart.address = kwargs.get('address', None)
+            existing_cart.mobile_no = kwargs.get('mobile_no', None)
+            existing_cart.save()
+            return UpdateCart(cart=existing_cart)
+        except BaseException as e:
+            print(e)
+            raise GraphQLError('An error occurred in saving your credentials')
+
+
 def calculate_totals(existing_cart):
     existing_cart.price_of_regular = int(os.environ['PRICE_OF_REGULAR']) * \
-                existing_cart.no_of_regular_batches
+        existing_cart.no_of_regular_batches
     existing_cart.price_of_premium = int(os.environ['PRICE_OF_PREMIUM']) * \
         existing_cart.no_of_premium_batches
     existing_cart.total_price = existing_cart.price_of_regular + \
@@ -178,6 +209,8 @@ def calculate_totals(existing_cart):
     existing_cart.save()
     return existing_cart
 
+
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     add_to_cart = AddToCart.Field()
+    update_cart = UpdateCart.Field()
