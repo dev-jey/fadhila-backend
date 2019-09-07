@@ -100,7 +100,7 @@ class Query(graphene.AbstractType):
             )
         orders = check_other_filters(kwargs, filter)
         if get_all:
-            orders = Orders.objects.all().order_by('address__town_name')
+            orders = Orders.objects.all().order_by('address')
         premium = Orders.objects.filter(is_cancelled=False).aggregate(
             Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
         regular = Orders.objects.filter(is_cancelled=False).aggregate(
@@ -126,10 +126,10 @@ def check_other_filters(kwargs, filter):
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
         orders = Orders.objects.filter(filter).filter(created_at__date=from_date).filter(
-            is_cancelled=isCancelled).order_by('address__town_name')
+            is_cancelled=isCancelled).order_by('address')
     else:
         orders = Orders.objects.filter(filter).filter(created_at__range=(
-            from_date, to)).filter(is_cancelled=isCancelled).order_by('address__town_name')
+            from_date, to)).filter(is_cancelled=isCancelled).order_by('address')
     return orders
 
 
