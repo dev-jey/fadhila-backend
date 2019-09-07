@@ -4,6 +4,7 @@ import graphql_jwt
 from messenger.apps.cards import schema as cards_schema
 from messenger.apps.authentication import schema as auth_schema
 from messenger.apps.orders import schema as orders_schema
+from messenger.apps.payments import schema as payments_schema
 from messenger.apps.country import schema as country_schema
 from messenger.apps.authentication.objects import UserType
 
@@ -27,6 +28,7 @@ class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 class Mutation(auth_schema.Mutation,
                cards_schema.Mutation,
                orders_schema.Mutation,
+               payments_schema.Mutation,
                graphene.ObjectType):
     '''Registers all the mutations in each app's schema'''
     #jwt token auth, verify_token and refresh token mutations
