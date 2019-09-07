@@ -14,6 +14,11 @@ class LipaNaMpesa(graphene.Mutation):
     # Returns the mpesa success status 
     success = graphene.String()
 
+    class Arguments:
+        '''Takes in cart details as arguments'''
+        mobile_no = graphene.String()
+        amount = graphene.Int()
+
     @login_required
     def mutate(self, info, **kwargs):
         '''Add to cart mutation'''
@@ -26,13 +31,13 @@ class LipaNaMpesa(graphene.Mutation):
                 "Password": LipanaMpesaPpassword.decode_password,
                 "Timestamp": LipanaMpesaPpassword.lipa_time,
                 "TransactionType": "CustomerPayBillOnline",
-                "Amount": 1,
-                "PartyA": 254708197333,
+                "Amount": kwargs.get('amount'),
+                "PartyA": kwargs.get('mobile_no'),
                 "PartyB": LipanaMpesaPpassword.Business_short_code,
-                "PhoneNumber": 254708197333,
+                "PhoneNumber": kwargs.get('mobile_no'),
                 "CallBackURL": os.environ['MPESA_CALLBACK_URL'],
-                "AccountReference": "James",
-                "TransactionDesc": "Testing stk push"
+                "AccountReference": "Fadhila Network",
+                "TransactionDesc": "Fadhila Network"
             }
             response = requests.post(api_url, json=request, headers=headers)
             return LipaNaMpesa(success='success')

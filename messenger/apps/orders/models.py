@@ -39,7 +39,7 @@ class Cart(models.Model):
     receiver_fname = models.CharField(max_length=100, null=False, default='')
     receiver_lname = models.CharField(max_length=100, null=False, default='')
     address = models.CharField(max_length=255, null=False, default='')
-    mobile_no = models.IntegerField(default=0)
+    mobile_no = models.CharField(max_length=12, null=False, default='')
     price_of_regular = models.DecimalField(max_digits=20, decimal_places=2)
     price_of_premium = models.DecimalField(max_digits=20, decimal_places=2)
     total_price = models.DecimalField(max_digits=20, decimal_places=2)

@@ -178,7 +178,7 @@ class UpdateCart(graphene.Mutation):
         receiver_fname = graphene.String()
         receiver_lname = graphene.String()
         address = graphene.String()
-        mobile_no = graphene.Int()
+        mobile_no = graphene.String()
 
     @login_required
     def mutate(self, info, **kwargs):
