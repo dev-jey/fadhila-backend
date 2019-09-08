@@ -4,6 +4,7 @@ from django.urls import path
 from graphene_django.views import GraphQLView
 from django_countries import countries
 from messenger.apps.country.models import Country
+from messenger.apps.payments import schema
 
 
 
@@ -17,5 +18,6 @@ except BaseException:
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('mpesa/confirmation', schema.confirm_request, name='mpesa_confirmation'),
     path('graphql', GraphQLView.as_view(graphiql=True)),
 ]

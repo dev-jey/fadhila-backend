@@ -9,6 +9,10 @@ import graphene
 from . mpesa_credentials import MpesaAccessToken, LipanaMpesaPpassword, MpesaC2bCredential
 
 
+def confirm_request(request):
+    print('>>>>>>>>>>>>>>>>>>>>>>>>', request)
+
+
 class LipaNaMpesa(graphene.Mutation):
     '''Adds to the cart'''
     # Returns the mpesa success status 
@@ -19,7 +23,7 @@ class LipaNaMpesa(graphene.Mutation):
         mobile_no = graphene.String()
         amount = graphene.Int()
 
-    @login_required
+    # @login_required
     def mutate(self, info, **kwargs):
         '''Add to cart mutation'''
         try:
@@ -40,7 +44,8 @@ class LipaNaMpesa(graphene.Mutation):
                 "TransactionDesc": "Fadhila Network"
             }
             response = requests.post(api_url, json=request, headers=headers)
-            return LipaNaMpesa(success='success')
+            print(response.text)
+            return LipaNaMpesa(success=json.loads(response.text)['CustomerMessage'])
         except BaseException as e:
             print(e)
             raise GraphQLError('An error occured. The payment could not be completed')
