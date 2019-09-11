@@ -10,7 +10,8 @@ from . mpesa_credentials import MpesaAccessToken, LipanaMpesaPpassword, MpesaC2b
 
 
 def confirm_request(request):
-    print('>>>>>>>>>>>>>>>>>>>>>>>>', request)
+    print(request.body)
+    print('>>>>>>>>>>>>>>>>>>>>>>>>')
 
 
 class LipaNaMpesa(graphene.Mutation):
