@@ -41,4 +41,4 @@ def task_create_random_serials():
 def check_available_orders():
     '''Get all orders made within the last 24hrs'''
     return Orders.objects.filter(
-        created_at__gte = timezone.now() - timedelta(days=1)).filter(is_cancelled=False).count()
+        created_at__gte = timezone.now() - timedelta(days=1)).count()

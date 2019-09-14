@@ -1,7 +1,6 @@
 '''Orders app schema'''
 import os
 import graphene
-import uuid
 from django.db.models import Q
 from django.db.models import Sum
 from graphql import GraphQLError
@@ -27,7 +26,7 @@ class Query(graphene.AbstractType):
         pass
 
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
-                                search=graphene.String(), is_cancelled=graphene.Boolean(),
+                                search=graphene.String(),
                                 from_date=graphene.String(), to=graphene.String()
                                 )
     dashboard_stats = graphene.Field(StatsType)
@@ -80,8 +79,8 @@ class Query(graphene.AbstractType):
     @login_required
     def resolve_dashboard_stats(self, info, **kwargs):
         users = User.objects.all().count()
-        orders = Orders.objects.filter(is_cancelled=False).count()
-        revenue = Orders.objects.filter(is_cancelled=False).aggregate(
+        orders = Orders.objects.count()
+        revenue = Orders.objects.aggregate(
             Sum('total_cost'))['total_cost__sum']
         return Stats(users=users, orders=orders, revenue=revenue)
 
@@ -101,35 +100,32 @@ class Query(graphene.AbstractType):
         orders = check_other_filters(kwargs, filter)
         if get_all:
             orders = Orders.objects.all().order_by('address')
-        premium = Orders.objects.filter(is_cancelled=False).aggregate(
+        premium = Orders.objects.aggregate(
             Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-        regular = Orders.objects.filter(is_cancelled=False).aggregate(
+        regular = Orders.objects.aggregate(
             Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        transport_costs = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('transport_fee'))['transport_fee__sum']
-        total_cards_cost = Orders.objects.filter(is_cancelled=False).aggregate(
+        total_cards_cost = Orders.objects.aggregate(
             Sum('cost_of_cards'))['cost_of_cards__sum']
-        total_revenue = Orders.objects.filter(is_cancelled=False).aggregate(
+        total_revenue = Orders.objects.aggregate(
             Sum('total_cost'))['total_cost__sum']
         return items_getter_helper(page, orders, OrdersPaginatedType,
                                    no_of_premium_batches=premium, no_of_regular_batches=regular,
-                                   total_transport_cost=transport_costs, total_cards_cost=total_cards_cost,
+                                   total_cards_cost=total_cards_cost,
                                    total_revenue=total_revenue)
 
 
 def check_other_filters(kwargs, filter):
     from_date = kwargs.get('from_date', None)
     to = kwargs.get('to', None)
-    isCancelled = kwargs.get('is_cancelled')
     orders = None
     if from_date > to:
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
-        orders = Orders.objects.filter(filter).filter(created_at__date=from_date).filter(
-            is_cancelled=isCancelled).order_by('address')
+        orders = Orders.objects.filter(filter).filter(
+            created_at__date=from_date).order_by('address')
     else:
         orders = Orders.objects.filter(filter).filter(created_at__range=(
-            from_date, to)).filter(is_cancelled=isCancelled).order_by('address')
+            from_date, to)).order_by('address')
     return orders
 
 
