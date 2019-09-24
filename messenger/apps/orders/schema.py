@@ -26,7 +26,7 @@ class Query(graphene.AbstractType):
         pass
 
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
-                                search=graphene.String(),
+                                search=graphene.String(), status=graphene.String(),
                                 from_date=graphene.String(), to=graphene.String()
                                 )
     dashboard_stats = graphene.Field(StatsType)
@@ -80,7 +80,7 @@ class Query(graphene.AbstractType):
     def resolve_dashboard_stats(self, info, **kwargs):
         users = User.objects.all().count()
         orders = Orders.objects.count()
-        revenue = Orders.objects.aggregate(
+        revenue = Orders.objects.filter(status='S').aggregate(
             Sum('total_cost'))['total_cost__sum']
         return Stats(users=users, orders=orders, revenue=revenue)
 
@@ -90,6 +90,7 @@ class Query(graphene.AbstractType):
         search = kwargs.get('search', None)
         page = kwargs.get('page', None)
         get_all = kwargs.get('get_all')
+        status = kwargs.get('status')
         filter = (
             Q(tracking_number__icontains='')
         )
@@ -104,28 +105,26 @@ class Query(graphene.AbstractType):
             Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
         regular = Orders.objects.aggregate(
             Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        total_cards_cost = Orders.objects.aggregate(
-            Sum('cost_of_cards'))['cost_of_cards__sum']
-        total_revenue = Orders.objects.aggregate(
+        total_cards_cost = Orders.objects.filter(status="S").aggregate(
             Sum('total_cost'))['total_cost__sum']
         return items_getter_helper(page, orders, OrdersPaginatedType,
                                    no_of_premium_batches=premium, no_of_regular_batches=regular,
-                                   total_cards_cost=total_cards_cost,
-                                   total_revenue=total_revenue)
+                                   total_cards_cost=total_cards_cost)
 
 
 def check_other_filters(kwargs, filter):
     from_date = kwargs.get('from_date', None)
     to = kwargs.get('to', None)
+    status = kwargs.get('status')
     orders = None
     if from_date > to:
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
         orders = Orders.objects.filter(filter).filter(
-            created_at__date=from_date).order_by('address')
+            created_at__date=from_date).filter(status=status).order_by('address')
     else:
         orders = Orders.objects.filter(filter).filter(created_at__range=(
-            from_date, to)).order_by('address')
+            from_date, to)).filter(status=status).order_by('address')
     return orders
 
 

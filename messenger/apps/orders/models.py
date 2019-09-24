@@ -7,6 +7,11 @@ from messenger.apps.authentication.models import User
 
 class Orders(models.Model):
     '''Defines attributes of the order model'''
+    STATUS = [
+    ('S', 'Successful'),
+    ('C', 'Cancelled'),
+    ('P', 'Pending')
+    ]
     tracking_number = models.CharField(max_length=100)
     address = models.CharField(max_length=255)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
@@ -14,7 +19,11 @@ class Orders(models.Model):
     receiver_lname = models.CharField(max_length=100, null=False, default='')
     total_no_of_card_batches = models.IntegerField(default=0)
     mobile_no = models.CharField(max_length=12)
-    cost_of_cards = models.DecimalField(max_digits=20, decimal_places=2)
+    status = models.CharField(
+        max_length=1,
+        choices=STATUS,
+        default='P',
+    )
     total_cost = models.DecimalField(max_digits=20, decimal_places=2)
     no_of_regular_batches = models.IntegerField(default=0)
     no_of_premium_batches = models.IntegerField(default=0)

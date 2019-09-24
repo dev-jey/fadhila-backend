@@ -7,6 +7,7 @@ import json
 from graphql_extensions.auth.decorators import login_required
 from graphql import GraphQLError
 import graphene
+from .tasks import check_mpesa_confirmation
 from . mpesa_credentials import MpesaAccessToken, LipanaMpesaPpassword, MpesaC2bCredential
 from django.views.decorators.http import require_http_methods
 from messenger.apps.orders.models import Orders, Cart
@@ -14,66 +15,35 @@ from .models import Payments
 from .objects import PaymentType
 
 
-class Query(graphene.AbstractType):
-    '''Defines a query for all orders'''
-
-    def __init__(self):
-        pass
-
-    check_paid = graphene.Field(PaymentType)
-
-    @login_required
-    def resolve_check_paid(self, info, **kwargs):
-        current_user = info.context.user
-        try:
-            exists = Payments.objects.get(owner=current_user)
-            return exists
-        except BaseException as e:
-            raise GraphQLError('Error in retrieving payment')
-
 @require_http_methods(["POST"])
-def confirm_request(request):
+def confirm_request(request, order_id):
     res = json.loads(request.body)['Body']['stkCallback']['ResultCode']
+    new_order = Orders.objects.get(id=order_id)
+    confirmation = check_mpesa_confirmation.delay(order_id)
+    confirmation.revoke()
+    if res != 0:
+        new_order.status = 'C'
+        new_order.save()
     try:
-        if res == 0:
-            my_cart = Cart.objects.get(payer_mobile_no=json.loads(request.body)[
-                'Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value'])
-            tracking_number = uuid.uuid4().hex.upper()[0:8]
-            new_order = Orders(
-                tracking_number=tracking_number,
-                address=my_cart.address,
-                receiver_fname=my_cart.receiver_fname,
-                receiver_lname=my_cart.receiver_lname,
-                mobile_no=my_cart.mobile_no,
-                no_of_regular_batches=my_cart.no_of_regular_batches,
-                no_of_premium_batches=my_cart.no_of_premium_batches,
-                owner=my_cart.owner
-            )
-            new_order.save()
-            # request.session['order_id'] = new_order.id
-            payment = Payments(
-                ref_number=json.loads(request.body)[
-                    'Body']['stkCallback']['CallbackMetadata']['Item'][1]['Value'],
-                amount=json.loads(request.body)[
-                    'Body']['stkCallback']['CallbackMetadata']['Item'][0]['Value'],
-                mobile_no=json.loads(request.body)[
-                    'Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value'],
-                paid_at=json.loads(request.body)[
-                    'Body']['stkCallback']['CallbackMetadata']['Item'][3]['Value'],
-                order=new_order,
-                owner=my_cart.owner
-            )
-            print(request.session.get('order_id'))
-            payment.save()
-            my_cart.delete()
-            return HttpResponse('Successfully made the payment')
-        return HttpResponse('Failure in payment')
-    except Exception as e:
-        print(e)
         my_cart = Cart.objects.get(payer_mobile_no=json.loads(request.body)[
             'Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value'])
-        my_cart.payer_mobile_no = ''
-        my_cart.save()
+        payment = Payments(
+            ref_number=json.loads(request.body)[
+                'Body']['stkCallback']['CallbackMetadata']['Item'][1]['Value'],
+            amount=json.loads(request.body)[
+                'Body']['stkCallback']['CallbackMetadata']['Item'][0]['Value'],
+            mobile_no=json.loads(request.body)[
+                'Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value'],
+            paid_at=json.loads(request.body)[
+                'Body']['stkCallback']['CallbackMetadata']['Item'][3]['Value'],
+            order=new_order,
+            owner=new_order.owner
+        )
+        payment.save()
+        my_cart.delete()
+        return HttpResponse('Successfully made the payment')
+    except Exception as e:
+        print(e)
         return HttpResponse('Failure in payment')
 
 
@@ -87,17 +57,30 @@ class LipaNaMpesa(graphene.Mutation):
         mobile_no = graphene.String()
         amount = graphene.Int()
 
-    # @login_required
+    @login_required
     def mutate(self, info, **kwargs):
         '''Add to cart mutation'''
         try:
-            payer_mobile_no = kwargs.get('payer_mobile_no', None)
-            existing_cart = Cart.objects.get(owner=info.context.user)
-            existing_cart.payer_mobile_no = payer_mobile_no
-            existing_cart.save()
+            payer_mobile_no = kwargs.get('mobile_no')
+            my_cart = Cart.objects.get(owner=info.context.user)
+            my_cart.payer_mobile_no = payer_mobile_no
+            my_cart.save()
             access_token = MpesaAccessToken.validated_mpesa_access_token
             api_url = os.environ['MPESA_STKPUSH']
             headers = {"Authorization": "Bearer %s" % access_token}
+            tracking_number = uuid.uuid4().hex.upper()[0:8]
+            new_order = Orders(
+                tracking_number=tracking_number,
+                address=my_cart.address,
+                receiver_fname=my_cart.receiver_fname,
+                receiver_lname=my_cart.receiver_lname,
+                mobile_no=my_cart.mobile_no,
+                no_of_regular_batches=my_cart.no_of_regular_batches,
+                no_of_premium_batches=my_cart.no_of_premium_batches,
+                total_cost=my_cart.total_price,
+                owner=my_cart.owner
+            )
+            new_order.save()
             request = {
                 "BusinessShortCode": LipanaMpesaPpassword.Business_short_code,
                 "Password": LipanaMpesaPpassword.decode_password,
@@ -107,16 +90,16 @@ class LipaNaMpesa(graphene.Mutation):
                 "PartyA": kwargs.get('mobile_no'),
                 "PartyB": LipanaMpesaPpassword.Business_short_code,
                 "PhoneNumber": kwargs.get('mobile_no'),
-                "CallBackURL": os.environ['MPESA_CALLBACK_URL'],
+                "CallBackURL": f"{os.environ['MPESA_CALLBACK_URL']}/{new_order.id}/",
                 "AccountReference": "Fadhila Network",
                 "TransactionDesc": "Fadhila Network"
             }
             response = requests.post(api_url, json=request, headers=headers)
+            check_mpesa_confirmation.delay(new_order.id)
             return LipaNaMpesa(success=json.loads(response.text)['CustomerMessage'])
         except BaseException as e:
             print(e)
-            raise GraphQLError('An error occured. The payment could not be completed. Either the request has already been sent on your mobile phone' +
-                               ' or there is downtime from our side')
+            raise GraphQLError('An error occured. Please try again')
 
 
 class Mutation(graphene.ObjectType):
