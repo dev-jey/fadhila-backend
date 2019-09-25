@@ -2,6 +2,7 @@ from django.http import HttpResponse
 import os
 import uuid
 import requests
+import datetime
 from requests.auth import HTTPBasicAuth
 import json
 from graphql_extensions.auth.decorators import login_required
@@ -34,6 +35,7 @@ def confirm_request(request, order_id):
                 'Body']['stkCallback']['CallbackMetadata']['Item'][0]['Value'],
             mobile_no=json.loads(request.body)[
                 'Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value'],
+            payment_mode='M',
             paid_at=json.loads(request.body)[
                 'Body']['stkCallback']['CallbackMetadata']['Item'][3]['Value'],
             order=new_order,
@@ -48,18 +50,18 @@ def confirm_request(request, order_id):
 
 
 class LipaNaMpesa(graphene.Mutation):
-    '''Adds to the cart'''
+    '''Handles payments'''
     # Returns the mpesa success status
     success = graphene.String()
 
     class Arguments:
-        '''Takes in cart details as arguments'''
+        '''Takes in mobile_no and amount details as arguments'''
         mobile_no = graphene.String()
         amount = graphene.Int()
 
     @login_required
     def mutate(self, info, **kwargs):
-        '''Add to cart mutation'''
+        '''Lipa na mpesa mutation'''
         try:
             payer_mobile_no = kwargs.get('mobile_no')
             my_cart = Cart.objects.get(owner=info.context.user)
@@ -102,6 +104,57 @@ class LipaNaMpesa(graphene.Mutation):
             raise GraphQLError('An error occured. Please try again')
 
 
+
+class PaypalPayment(graphene.Mutation):
+    '''Paypal payment'''
+    # Returns the mpesa success status
+    success = graphene.String()
+
+    class Arguments:
+        '''Takes in arguments in mutation'''
+        order_id = graphene.String()
+        payer = graphene.String()
+        amount = graphene.Int()
+
+    @login_required
+    def mutate(self, info, **kwargs):
+        '''Paypal mutation to create order and payment record'''
+        try:
+            payer = kwargs.get('payer')
+            amount = kwargs.get('amount')
+            order_id = kwargs.get('order_id')
+            my_cart = Cart.objects.get(owner=info.context.user)
+            tracking_number = uuid.uuid4().hex.upper()[0:8]
+            new_order = Orders(
+                tracking_number=tracking_number,
+                address='',
+                receiver_fname='',
+                receiver_lname='',
+                mobile_no='',
+                status="S",
+                no_of_regular_batches=my_cart.no_of_regular_batches,
+                no_of_premium_batches=my_cart.no_of_premium_batches,
+                total_cost=my_cart.total_price,
+                owner=my_cart.owner
+            )
+            new_order.save()
+            payment = Payments(
+            ref_number=order_id,
+            amount=amount,
+            mobile_no='N/A',
+            payment_mode='P',
+            paid_at=datetime.datetime.now(),
+            order=new_order,
+            owner=new_order.owner
+            )
+            payment.save()
+            my_cart.delete()
+            return PaypalPayment(success='Payment made successfully')
+        except BaseException as e:
+            print(e)
+            raise GraphQLError('An error occured. Please try again')
+
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     lipa_na_mpesa = LipaNaMpesa.Field()
+    paypal_payment = PaypalPayment.Field()

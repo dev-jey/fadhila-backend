@@ -19,6 +19,5 @@ except BaseException:
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('mpesa/confirmation/<int:order_id>/', schema.confirm_request, name='mpesa_confirmation'),
-    path('paypal/', include('paypal.standard.ipn.urls')),
     path('graphql', GraphQLView.as_view(graphiql=True)),
 ]

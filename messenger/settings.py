@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'messenger.apps.orders',
     'messenger.apps.payments',
     'graphene_django',
-    'paypal.standard.ipn',
     'django_countries',
     'social_django'
 ]
@@ -197,7 +196,3 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
-
-# Paypal settings
-PAYPAL_RECEIVER_EMAIL = os.environ['PAYPAL_RECEIVER_EMAIL']
-PAYPAL_TEST = True
