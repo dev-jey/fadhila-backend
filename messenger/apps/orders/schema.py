@@ -9,7 +9,7 @@ from .objects import OrderType, OrdersPaginatedType, StatsType, CartType
 from messenger.apps.authentication.objects import UserType
 from messenger.apps.cards.models import Card
 from messenger.apps.cards.objects import CardsDataType
-from .models import Orders, User, Cart
+from .models import Orders, User, Cart, Locations
 from messenger.apps.cards.utils import get_paginator, items_getter_helper
 
 
@@ -90,7 +90,10 @@ class Query(graphene.AbstractType):
         search = kwargs.get('search', None)
         page = kwargs.get('page', None)
         get_all = kwargs.get('get_all')
-        status = kwargs.get('status')
+        status = kwargs.get('status', None)
+
+        from_date = kwargs.get('from_date', None)
+        to = kwargs.get('to', None)
         filter = (
             Q(tracking_number__icontains='')
         )
@@ -99,14 +102,36 @@ class Query(graphene.AbstractType):
                 Q(tracking_number__icontains=search)
             )
         orders = check_other_filters(kwargs, filter)
+        
+        if from_date == to:
+            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__date=to).aggregate(
+                Sum('total_cost'))['total_cost__sum']
+        if from_date < to:
+            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('total_cost'))['total_cost__sum']
+
         if get_all:
+            premium = Orders.objects.aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.aggregate(
+                Sum('total_cost'))['total_cost__sum']
             orders = Orders.objects.all().order_by('address')
-        premium = Orders.objects.aggregate(
-            Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-        regular = Orders.objects.aggregate(
-            Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        total_cards_cost = Orders.objects.filter(status="S").aggregate(
-            Sum('total_cost'))['total_cost__sum']
+
         return items_getter_helper(page, orders, OrdersPaginatedType,
                                    no_of_premium_batches=premium, no_of_regular_batches=regular,
                                    total_cards_cost=total_cards_cost)
@@ -180,12 +205,14 @@ class UpdateCart(graphene.Mutation):
         '''Add to cart mutation'''
         try:
             owner = info.context.user
+            location_id = Locations.objects.get(
+                name=kwargs.get('address').strip())
             existing_cart = Cart.objects.get(owner=owner)
             existing_cart.receiver_fname = kwargs.get(
                 'receiver_fname', None).strip()
             existing_cart.receiver_lname = kwargs.get(
                 'receiver_lname', None).strip()
-            existing_cart.address = kwargs.get('address', None)
+            existing_cart.address = location_id
             existing_cart.mobile_no = kwargs.get('mobile_no', None)
             existing_cart.save()
             return UpdateCart(cart=existing_cart)

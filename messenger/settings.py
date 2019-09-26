@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'messenger.apps.cards',
     'messenger.apps.orders',
     'messenger.apps.payments',
+    'messenger.apps.locations',
     'graphene_django',
     'django_countries',
     'social_django'

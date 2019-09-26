@@ -6,12 +6,14 @@ from messenger.apps.authentication import schema as auth_schema
 from messenger.apps.orders import schema as orders_schema
 from messenger.apps.payments import schema as payments_schema
 from messenger.apps.country import schema as country_schema
+from messenger.apps.locations import schema as locations_schema
 from messenger.apps.authentication.objects import UserType
 
 class Query(cards_schema.Query,
             auth_schema.Query,
             orders_schema.Query,
             country_schema.Query,
+            locations_schema.Query,
             graphene.ObjectType):
     '''Registers all the queries in each app's schema'''
     pass
