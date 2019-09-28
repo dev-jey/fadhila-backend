@@ -127,7 +127,6 @@ class PaypalPayment(graphene.Mutation):
             tracking_number = uuid.uuid4().hex.upper()[0:8]
             new_order = Orders(
                 tracking_number=tracking_number,
-                address='',
                 receiver_fname='',
                 receiver_lname='',
                 mobile_no='',
