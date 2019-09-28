@@ -14,7 +14,7 @@ class Orders(models.Model):
     ('P', 'Pending')
     ]
     tracking_number = models.CharField(max_length=100)
-    address =models.ForeignKey(Locations, on_delete=models.CASCADE, null=False)
+    address =models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     receiver_fname = models.CharField(max_length=100, null=False, default='')
     receiver_lname = models.CharField(max_length=100, null=False, default='')
