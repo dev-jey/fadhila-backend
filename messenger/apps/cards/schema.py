@@ -87,6 +87,7 @@ class CreateCard(graphene.Mutation):
                 card.save()
             return CreateCard(card=card)
         except BaseException as e:
+            print(e)
             raise GraphQLError('Error generating cards', e)
 
 class VerifyCard(graphene.Mutation):
@@ -112,7 +113,8 @@ class VerifyCard(graphene.Mutation):
             card.save()
             count = Card.objects.filter(owner=user).count()
             return VerifyCard(card=card, count=count)
-        except BaseException:
+        except BaseException as e:
+            print(e)
             raise GraphQLError("You have entered an invalid serial number")
 
 

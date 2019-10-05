@@ -1,25 +1,31 @@
 '''Model for orders'''
 from django.db import models
 from messenger.apps.authentication.models import User
-from messenger.apps.address.models import HomeAddress
+from messenger.apps.locations.models import Locations
 
 # Create your models here.
 
 
 class Orders(models.Model):
     '''Defines attributes of the order model'''
+    STATUS = [
+    ('S', 'Successful'),
+    ('C', 'Cancelled'),
+    ('P', 'Pending')
+    ]
     tracking_number = models.CharField(max_length=100)
-    address = models.ForeignKey(
-        HomeAddress, on_delete=models.CASCADE, null=False, default='')
-    cost_of_cards = models.DecimalField(max_digits=20, decimal_places=2)
-    transport_fee = models.DecimalField(max_digits=20, decimal_places=2)
-    is_cancelled = models.BooleanField(default=False)
-    total_cost = models.DecimalField(max_digits=20, decimal_places=2)
+    address =models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     receiver_fname = models.CharField(max_length=100, null=False, default='')
     receiver_lname = models.CharField(max_length=100, null=False, default='')
     total_no_of_card_batches = models.IntegerField(default=0)
-    mobile_no = models.IntegerField(default=0)
+    mobile_no = models.CharField(max_length=12)
+    status = models.CharField(
+        max_length=1,
+        choices=STATUS,
+        default='P',
+    )
+    total_cost = models.DecimalField(max_digits=20, decimal_places=2)
     no_of_regular_batches = models.IntegerField(default=0)
     no_of_premium_batches = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,6 +44,11 @@ class Cart(models.Model):
     '''Cart model'''
     no_of_regular_batches = models.IntegerField(default=0)
     no_of_premium_batches = models.IntegerField(default=0)
+    receiver_fname = models.CharField(max_length=100, null=False, default='')
+    receiver_lname = models.CharField(max_length=100, null=False, default='')
+    address =models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
+    mobile_no = models.CharField(max_length=12, null=False, default='')
+    payer_mobile_no = models.CharField(max_length=12, null=True)
     price_of_regular = models.DecimalField(max_digits=20, decimal_places=2)
     price_of_premium = models.DecimalField(max_digits=20, decimal_places=2)
     total_price = models.DecimalField(max_digits=20, decimal_places=2)
@@ -50,6 +61,6 @@ class Cart(models.Model):
         '''Defines the ordering of the
          cart if retrieved'''
         ordering = ('created_at',)
-    
+
     def __str__(self):
         return self.owner.username

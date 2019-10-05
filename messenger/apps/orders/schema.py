@@ -1,7 +1,6 @@
 '''Orders app schema'''
 import os
 import graphene
-import uuid
 from django.db.models import Q
 from django.db.models import Sum
 from graphql import GraphQLError
@@ -10,7 +9,7 @@ from .objects import OrderType, OrdersPaginatedType, StatsType, CartType
 from messenger.apps.authentication.objects import UserType
 from messenger.apps.cards.models import Card
 from messenger.apps.cards.objects import CardsDataType
-from .models import Orders, User, Cart
+from .models import Orders, User, Cart, Locations
 from messenger.apps.cards.utils import get_paginator, items_getter_helper
 
 
@@ -27,7 +26,7 @@ class Query(graphene.AbstractType):
         pass
 
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
-                                search=graphene.String(), is_cancelled=graphene.Boolean(),
+                                search=graphene.String(), status=graphene.String(),
                                 from_date=graphene.String(), to=graphene.String()
                                 )
     dashboard_stats = graphene.Field(StatsType)
@@ -63,6 +62,7 @@ class Query(graphene.AbstractType):
             cards = Card.objects.filter(owner_id=current_user)
             return items_getter_helper(page, cards, CardsDataType)
         except BaseException as e:
+            print(e)
             raise GraphQLError("An error occured while fetching cards")
 
     @login_required
@@ -73,13 +73,14 @@ class Query(graphene.AbstractType):
             orders = Orders.objects.filter(owner_id=current_user)
             return items_getter_helper(page, orders, OrdersPaginatedType)
         except BaseException as e:
+            print(e)
             raise GraphQLError("An error occured while fetching orders")
 
     @login_required
     def resolve_dashboard_stats(self, info, **kwargs):
         users = User.objects.all().count()
-        orders = Orders.objects.filter(is_cancelled=False).count()
-        revenue = Orders.objects.filter(is_cancelled=False).aggregate(
+        orders = Orders.objects.count()
+        revenue = Orders.objects.filter(status='S').aggregate(
             Sum('total_cost'))['total_cost__sum']
         return Stats(users=users, orders=orders, revenue=revenue)
 
@@ -89,6 +90,10 @@ class Query(graphene.AbstractType):
         search = kwargs.get('search', None)
         page = kwargs.get('page', None)
         get_all = kwargs.get('get_all')
+        status = kwargs.get('status', None)
+
+        from_date = kwargs.get('from_date', None)
+        to = kwargs.get('to', None)
         filter = (
             Q(tracking_number__icontains='')
         )
@@ -97,37 +102,54 @@ class Query(graphene.AbstractType):
                 Q(tracking_number__icontains=search)
             )
         orders = check_other_filters(kwargs, filter)
+        
+        if from_date == to:
+            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__date=to).aggregate(
+                Sum('total_cost'))['total_cost__sum']
+        if from_date < to:
+            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+                from_date, to)).aggregate(
+                Sum('total_cost'))['total_cost__sum']
+
         if get_all:
-            orders = Orders.objects.all().order_by('address__town_name')
-        premium = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-        regular = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        transport_costs = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('transport_fee'))['transport_fee__sum']
-        total_cards_cost = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('cost_of_cards'))['cost_of_cards__sum']
-        total_revenue = Orders.objects.filter(is_cancelled=False).aggregate(
-            Sum('total_cost'))['total_cost__sum']
+            premium = Orders.objects.aggregate(
+                Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
+            regular = Orders.objects.aggregate(
+                Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
+            total_cards_cost = Orders.objects.aggregate(
+                Sum('total_cost'))['total_cost__sum']
+            orders = Orders.objects.all().order_by('address')
+
         return items_getter_helper(page, orders, OrdersPaginatedType,
                                    no_of_premium_batches=premium, no_of_regular_batches=regular,
-                                   total_transport_cost=transport_costs, total_cards_cost=total_cards_cost,
-                                   total_revenue=total_revenue)
+                                   total_cards_cost=total_cards_cost)
 
 
 def check_other_filters(kwargs, filter):
     from_date = kwargs.get('from_date', None)
     to = kwargs.get('to', None)
-    isCancelled = kwargs.get('is_cancelled')
+    status = kwargs.get('status')
     orders = None
     if from_date > to:
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
-        orders = Orders.objects.filter(filter).filter(created_at__date=from_date).filter(
-            is_cancelled=isCancelled).order_by('address__town_name')
+        orders = Orders.objects.filter(filter).filter(
+            created_at__date=from_date).filter(status=status).order_by('address')
     else:
         orders = Orders.objects.filter(filter).filter(created_at__range=(
-            from_date, to)).filter(is_cancelled=isCancelled).order_by('address__town_name')
+            from_date, to)).filter(status=status).order_by('address')
     return orders
 
 
@@ -162,12 +184,46 @@ class AddToCart(graphene.Mutation):
             return AddToCart(cart=calculate_totals(existing_cart))
 
         except Exception as e:
+            print(e)
             raise GraphQLError('There has been an error updating your cart')
+
+
+class UpdateCart(graphene.Mutation):
+    '''Update the Cart Details'''
+    # Returns the cart instance info
+    cart = graphene.Field(CartType)
+
+    class Arguments:
+        '''Takes in cart details as arguments'''
+        receiver_fname = graphene.String()
+        receiver_lname = graphene.String()
+        address = graphene.String()
+        mobile_no = graphene.String()
+
+    @login_required
+    def mutate(self, info, **kwargs):
+        '''Add to cart mutation'''
+        try:
+            owner = info.context.user
+            location_id = Locations.objects.get(
+                name=kwargs.get('address').strip())
+            existing_cart = Cart.objects.get(owner=owner)
+            existing_cart.receiver_fname = kwargs.get(
+                'receiver_fname', None).strip()
+            existing_cart.receiver_lname = kwargs.get(
+                'receiver_lname', None).strip()
+            existing_cart.address = location_id
+            existing_cart.mobile_no = kwargs.get('mobile_no', None)
+            existing_cart.save()
+            return UpdateCart(cart=existing_cart)
+        except BaseException as e:
+            print(e)
+            raise GraphQLError('An error occurred in saving your credentials')
 
 
 def calculate_totals(existing_cart):
     existing_cart.price_of_regular = int(os.environ['PRICE_OF_REGULAR']) * \
-                existing_cart.no_of_regular_batches
+        existing_cart.no_of_regular_batches
     existing_cart.price_of_premium = int(os.environ['PRICE_OF_PREMIUM']) * \
         existing_cart.no_of_premium_batches
     existing_cart.total_price = existing_cart.price_of_regular + \
@@ -175,6 +231,8 @@ def calculate_totals(existing_cart):
     existing_cart.save()
     return existing_cart
 
+
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     add_to_cart = AddToCart.Field()
+    update_cart = UpdateCart.Field()

@@ -32,8 +32,10 @@ INSTALLED_APPS = [
     'messenger.apps.country',
     'messenger.apps.authentication',
     'messenger.apps.cards',
-    'messenger.apps.address',
     'messenger.apps.orders',
+    'messenger.apps.payments',
+    'messenger.apps.locations',
+    'messenger.apps.feedback',
     'graphene_django',
     'django_countries',
     'social_django'
@@ -59,7 +61,7 @@ SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-   'fields': 'id, name, email, age_range'
+    'fields': 'id, name, email, age_range'
 }
 
 SOCIAL_AUTH_FACEBOOK_KEY = os.environ['SOCIAL_AUTH_FACEBOOK_KEY']
@@ -71,7 +73,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
-    'social_core.pipeline.social_auth.associate_by_email',  # <--- enable this one. to match users per email adress
+    # <--- enable this one. to match users per email adress
+    'social_core.pipeline.social_auth.associate_by_email',
     'social_core.pipeline.user.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
@@ -172,14 +175,14 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-#CORS settings
+# CORS settings
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
     'fadhila.herokuapp.com',
     'localhost:3000',
 )
 
-#Email sending stuff
+# Email sending stuff
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
 EMAIL_HOST = os.environ['EMAIL_HOST']
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']

@@ -86,7 +86,8 @@ class CreateUser(graphene.Mutation):
             to_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
             send_mail(message, mail_subject, to_email)
             return CreateUser(user=new_user)
-        except BaseException as error:
+        except BaseException as e:
+            print(e)
             new_user.delete()
 
 
@@ -208,7 +209,8 @@ class UpdateProfile(graphene.Mutation):
             user.country=country_id
             user.save()
             return UpdateProfile(user=user)
-        except Exception as error:
+        except Exception as e:
+            print(e)
             raise GraphQLError('There has been an error updating your profile.' 
             +' Try again later')
 
