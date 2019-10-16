@@ -16,7 +16,7 @@ from .models import Card
 logger = get_task_logger(__name__)
 
 
-@periodic_task(run_every=(crontab(minute='*/10640')),
+@periodic_task(run_every=(crontab(minute='*/1')),
                name="task_create_random_serials",
                ignore_result=True)
 def task_create_random_serials():
