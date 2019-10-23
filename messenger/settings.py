@@ -1,6 +1,6 @@
 '''Project settings'''
 import os
-import django_heroku
+# import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -127,8 +127,8 @@ DATABASES = {
         'NAME': os.environ['DB_NAME'],
         'USER': os.environ['DB_USER'],
         'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -189,7 +189,7 @@ EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 
-django_heroku.settings(locals())
+# django_heroku.settings(locals())
 
 # CELERY STUFF
 CELERY_BROKER_URL = 'redis://localhost:6379'
