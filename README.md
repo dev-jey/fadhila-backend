@@ -61,6 +61,8 @@ pip install -r requirements.txt
     export MPESA_CONSUMER_KEY="sample_mpesa_auth_key"
     export MPESA_CONSUMER_SECRET="sample_mpesa_key"
     export MPESA_API_URL="https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    export MPESA_STKPUSH="https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+    export MPESA_CALLBACK_URL="https://{sample_code}.ngrok.io/mpesa/confirmation"
     export MPESA_SHORT_CODE="sample_paybill_number eg. 174379"
     export MPESA_PASSKEY="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
     ```

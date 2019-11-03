@@ -76,7 +76,7 @@ class LipaNaMpesa(graphene.Mutation):
                 address=my_cart.address,
                 receiver_fname=my_cart.receiver_fname,
                 receiver_lname=my_cart.receiver_lname,
-                mobile_no=my_cart.mobile_no,
+                mobile_no=payer_mobile_no,
                 no_of_regular_batches=my_cart.no_of_regular_batches,
                 no_of_premium_batches=my_cart.no_of_premium_batches,
                 total_cost=my_cart.total_price,
