@@ -44,16 +44,25 @@ pip install -r requirements.txt
     6. Create a .env as guided by the .env_example and add the following configuration variables
     ```
     source env/bin/activate
-    export DB_NAME="database_name"
-    export DB_USER="sample_username"
-    export DB_PASS="sample_password"
-    export DB_HOST="host_name_eg_localhost"
-    export DB_PORT="port_number_eg_5432"
+    export DB_NAME="sample_db_name"
+    export DB_USER="sample_db_user"
+    export DB_PASS="sample_db_password"
+    export DB_HOST="localhost"
+    export DB_PORT="5432"
     export TIME_DELTA="30"
     export EMAIL_HOST="smtp.gmail.com"
-    export EMAIL_HOST_USER="testmail@mail.com"
-    export EMAIL_HOST_PASSWORD="pass21234"
+    export EMAIL_HOST_USER="sample_email"
+    export EMAIL_HOST_PASSWORD="sample_password"
     export EMAIL_PORT=587
+    export EMAIL_USE_TLS=True
+    export SECRET_KEY="sample_secret_key"
+    export SOCIAL_AUTH_FACEBOOK_KEY="sample_fb_auth_key"
+    export SOCIAL_AUTH_FACEBOOK_SECRET="sample_fb_auth_secret"
+    export MPESA_CONSUMER_KEY="sample_mpesa_auth_key"
+    export MPESA_CONSUMER_SECRET="sample_mpesa_key"
+    export MPESA_API_URL="https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    export MPESA_SHORT_CODE="sample_paybill_number eg. 174379"
+    export MPESA_PASSKEY="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
     ```
     7. Source .env to set the configuration variables:
     ```
