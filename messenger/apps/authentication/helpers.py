@@ -48,7 +48,7 @@ class UserValidations(object):
     def check_already_existing(self, username, email):
         '''Checks if the email or username is already existing'''
         try:
-            username_existing = User.objects.get(username=username.casefold())
+            username_existing = User.objects.get(username=username)
         except ObjectDoesNotExist:
             username_existing = None
 
