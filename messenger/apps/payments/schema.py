@@ -8,7 +8,6 @@ import json
 from graphql_extensions.auth.decorators import login_required
 from graphql import GraphQLError
 import graphene
-from .tasks import check_mpesa_confirmation
 from . mpesa_credentials import MpesaAccessToken, LipanaMpesaPpassword, MpesaC2bCredential
 from django.views.decorators.http import require_http_methods
 from messenger.apps.orders.models import Orders, Cart
@@ -20,10 +19,13 @@ from .objects import PaymentType
 def confirm_request(request, order_id):
     res = json.loads(request.body)['Body']['stkCallback']['ResultCode']
     new_order = Orders.objects.get(id=order_id)
-    confirmation = check_mpesa_confirmation.delay(order_id)
-    confirmation.revoke()
+    new_order.created_at = datetime.datetime.now()
+    new_order.updated_at = datetime.datetime.now()
     if res != 0:
         new_order.status = 'C'
+        new_order.save()
+    else:
+        new_order.status = 'S'
         new_order.save()
     try:
         my_cart = Cart.objects.get(payer_mobile_no=json.loads(request.body)[
@@ -97,7 +99,6 @@ class LipaNaMpesa(graphene.Mutation):
                 "TransactionDesc": "Fadhila Network"
             }
             response = requests.post(api_url, json=request, headers=headers)
-            check_mpesa_confirmation.delay(new_order.id)
             return LipaNaMpesa(success=json.loads(response.text)['CustomerMessage'])
         except BaseException as e:
             print(e)

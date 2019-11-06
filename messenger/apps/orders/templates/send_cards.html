@@ -1,0 +1,36 @@
+{% load inlinecss %}
+{% inlinecss "css/email.css" %}
+
+<html lang="en">
+
+<body>
+    <div class="title">Hi there,</div>
+    <div class="content">
+        <h2>Here are your cards.</h2>
+        <p>Regular Batches</p>{{order.no_of_regular_batches}}
+
+        <p>Premium Batches</p>{{order.no_of_premium_batches}}
+
+        <br><br>
+        {% for serial in serials_regular %}
+        <div className="col-lg-6 col-sm-6 d-flex align-items-center card-slot" key={card.id}>
+            <img className="w-100  card-img" src="https://res.cloudinary.com/dw675k0f5/image/upload/v1564942757/card.jpg" alt=""
+            width="380px" />
+            <h3 className="position-absolute ml-auto serial-txt">{{serial}}</h3>
+        </div>
+        {% endfor %}
+
+        {% for serial in serials_premium %}
+        <div className="col-lg-6 col-sm-6 d-flex align-items-center card-slot" key={card.id}>
+            <img width="380px" className="w-100  card-img" src="https://res.cloudinary.com/dw675k0f5/image/upload/v1567760240/chinese-business-card-translation-samples-intel-445-eng.jpg" alt="" />
+            <h3 className="position-absolute ml-auto serial-txt">{{serial}}</h3>
+        </div>
+        {% endfor %}
+        
+        <div class="footer">
+                <p>Fadhila Team &copy; 2019</p>
+        </div>
+    </div>
+</body>
+
+{% endinlinecss %}
