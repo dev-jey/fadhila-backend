@@ -198,6 +198,7 @@ class UpdateCart(graphene.Mutation):
         receiver_fname = graphene.String()
         receiver_lname = graphene.String()
         address = graphene.String()
+        mobile_no = graphene.String()
 
     @login_required
     def mutate(self, info, **kwargs):
@@ -212,6 +213,7 @@ class UpdateCart(graphene.Mutation):
             existing_cart.receiver_lname = kwargs.get(
                 'receiver_lname', None).strip()
             existing_cart.address = location_id
+            existing_cart.mobile_no = kwargs.get('mobile_no')
             existing_cart.save()
             return UpdateCart(cart=existing_cart)
         except BaseException as e:

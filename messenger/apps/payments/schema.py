@@ -78,7 +78,7 @@ class LipaNaMpesa(graphene.Mutation):
                 address=my_cart.address,
                 receiver_fname=my_cart.receiver_fname,
                 receiver_lname=my_cart.receiver_lname,
-                mobile_no=payer_mobile_no,
+                mobile_no=my_cart.mobile_no,
                 no_of_regular_batches=my_cart.no_of_regular_batches,
                 no_of_premium_batches=my_cart.no_of_premium_batches,
                 total_cost=my_cart.total_price,
@@ -128,24 +128,31 @@ class PaypalPayment(graphene.Mutation):
             tracking_number = uuid.uuid4().hex.upper()[0:8]
             new_order = Orders(
                 tracking_number=tracking_number,
-                receiver_fname='',
-                receiver_lname='',
-                mobile_no='',
                 status="S",
                 no_of_regular_batches=my_cart.no_of_regular_batches,
                 no_of_premium_batches=my_cart.no_of_premium_batches,
                 total_cost=my_cart.total_price,
                 owner=my_cart.owner
-            )
+                )
+            if my_cart.owner.country.code == "KE":
+                new_order.receiver_fname = my_cart.receiver_fname,
+                new_order.receiver_lname = my_cart.receiver_lname,
+                new_order.mobile_no = my_cart.mobile_no
+                new_order.address = my_cart.address
+            else:
+                new_order.receiver_fname = '',
+                new_order.receiver_lname = '',
+                new_order.mobile_no = ''
+                
             new_order.save()
             payment = Payments(
-            ref_number=order_id,
-            amount=amount,
-            mobile_no='N/A',
-            payment_mode='P',
-            paid_at=datetime.datetime.now(),
-            order=new_order,
-            owner=new_order.owner
+                ref_number=order_id,
+                amount=amount,
+                mobile_no='N/A',
+                payment_mode='P',
+                paid_at=datetime.datetime.now(),
+                order=new_order,
+                owner=new_order.owner
             )
             payment.save()
             my_cart.delete()
