@@ -46,7 +46,7 @@ class Cart(models.Model):
     no_of_premium_batches = models.IntegerField(default=0)
     receiver_fname = models.CharField(max_length=100, null=False, default='')
     receiver_lname = models.CharField(max_length=100, null=False, default='')
-    address =models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
+    address = models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
     mobile_no = models.CharField(max_length=12, null=False, default='')
     payer_mobile_no = models.CharField(max_length=12, null=True)
     price_of_regular = models.DecimalField(max_digits=20, decimal_places=2)
