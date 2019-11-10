@@ -44,6 +44,7 @@ pip install -r requirements.txt
     6. Create a .env as guided by the .env_example and add the following configuration variables
     ```
     source env/bin/activate
+    export CURRENT_DOMAIN="current_backend_domain"
     export DB_NAME="sample_db_name"
     export DB_USER="sample_db_user"
     export DB_PASS="sample_db_password"
