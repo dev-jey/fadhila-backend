@@ -26,7 +26,7 @@ class Query(graphene.AbstractType):
         pass
 
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
-                                search=graphene.String(), status=graphene.String(),
+                                search=graphene.String(), status=graphene.String(), foreign=graphene.Boolean(),
                                 from_date=graphene.String(), to=graphene.String()
                                 )
     dashboard_stats = graphene.Field(StatsType)
@@ -91,7 +91,9 @@ class Query(graphene.AbstractType):
         page = kwargs.get('page', None)
         get_all = kwargs.get('get_all')
         status = kwargs.get('status', None)
-
+        foreign = kwargs.get('foreign')
+        if not foreign:
+            foreign = False
         from_date = kwargs.get('from_date', None)
         to = kwargs.get('to', None)
         filter = (
@@ -101,25 +103,25 @@ class Query(graphene.AbstractType):
             filter = (
                 Q(tracking_number__icontains=search)
             )
-        orders = check_other_filters(kwargs, filter)
+        orders = check_other_filters(kwargs, filter, foreign)
 
         if from_date == to:
-            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+            premium = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(
                 Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+            regular = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(
                 Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__date=to).aggregate(
+            total_cards_cost = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__date=to).aggregate(
                 Sum('total_cost'))['total_cost__sum']
         if from_date < to:
-            premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+            premium = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(
                 Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-            regular = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+            regular = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(
                 Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-            total_cards_cost = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
+            total_cards_cost = Orders.objects.filter(status=status).filter(address__isnull=foreign).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(
                 Sum('total_cost'))['total_cost__sum']
 
@@ -137,7 +139,7 @@ class Query(graphene.AbstractType):
                                    total_cards_cost=total_cards_cost)
 
 
-def check_other_filters(kwargs, filter):
+def check_other_filters(kwargs, filter, foreign):
     from_date = kwargs.get('from_date', None)
     to = kwargs.get('to', None)
     status = kwargs.get('status')
@@ -145,10 +147,10 @@ def check_other_filters(kwargs, filter):
     if from_date > to:
         raise GraphQLError('Starting date must be less than final date')
     if from_date == to:
-        orders = Orders.objects.filter(filter).filter(
+        orders = Orders.objects.filter(filter).filter(address__isnull=foreign).filter(
             created_at__date=from_date).filter(status=status).order_by('address')
     else:
-        orders = Orders.objects.filter(filter).filter(created_at__range=(
+        orders = Orders.objects.filter(filter).filter(address__isnull=foreign).filter(created_at__range=(
             from_date, to)).filter(status=status).order_by('address')
     return orders
 

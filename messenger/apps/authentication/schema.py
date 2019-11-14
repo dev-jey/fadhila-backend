@@ -168,7 +168,8 @@ class ContactUs(graphene.Mutation):
             'message': kwargs.get('message')
         })
         mail_subject = 'Help Request from '+kwargs.get('name')
-        send_mail(message, mail_subject)
+        send_mail(message, mail_subject,
+                  os.environ['FADHILA_HELP_DESK'], new_email)
         return ContactUs(user=kwargs.get('name'))
 
 
@@ -320,15 +321,11 @@ class Mutation(graphene.ObjectType):
     deactivate_account = DeactivateAccount.Field()
 
 
-def send_mail(message, mail_subject, to_email=None):
+def send_mail(message, mail_subject, to_email, from_email=None):
     try:
         stripped_message = strip_tags(message)
-        if to_email:
-            email = EmailMultiAlternatives(
-                mail_subject, stripped_message, to=[to_email])
-        else:
-            email = EmailMultiAlternatives(
-                mail_subject, stripped_message, to=[os.environ['FADHILA_HELP_DESK']])
+        email = EmailMultiAlternatives(
+            mail_subject, stripped_message, from_email, to=[to_email])
         email.attach_alternative(message, "text/html")
         email.send()
     except BaseException as error:
