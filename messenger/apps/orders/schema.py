@@ -102,7 +102,7 @@ class Query(graphene.AbstractType):
                 Q(tracking_number__icontains=search)
             )
         orders = check_other_filters(kwargs, filter)
-        
+
         if from_date == to:
             premium = Orders.objects.filter(status=status).filter(filter).filter(created_at__range=(
                 from_date, to)).aggregate(

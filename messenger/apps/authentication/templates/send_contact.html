@@ -1,0 +1,23 @@
+{% load inlinecss %}
+{% inlinecss "css/email.css" %}
+
+<html lang="en">
+
+<body>
+    <div class="title">Hi, your help needed here.</div>
+    <div class="content">
+        <h3>Customer Details.</h3><br></br>
+        Name: {{name}}<br></br>    
+        Email: {{email}}<br></br>
+        Phone number: {{mobile_no}}<br></br>
+        <br></br>
+        <h5>Message</h5>
+            <p class="message">{{message}}</p>
+        <br></br><br></br>
+        <div class="footer">
+                <p>Fadhila Team &copy; 2019</p>
+        </div>
+    </div>
+</body>
+
+{% endinlinecss %}

@@ -16,7 +16,7 @@ from django.template.loader import render_to_string
 from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
 from messenger.apps.country.models import Country
 from .objects import UserType
-from .models import User
+from .models import User, Subscription
 from .helpers import UserValidations
 from .token_generator import TokenGenerator
 
@@ -73,7 +73,7 @@ class CreateUser(graphene.Mutation):
             email=user_data['email'],
         )
         new_user.set_password(user_data['password'])
-        new_user.is_verified=False
+        new_user.is_verified = False
         new_user.save()
         try:
             message = render_to_string('send_activate_email.html', {
@@ -144,6 +144,59 @@ class ResetPassword(graphene.Mutation):
         return ResetPassword(user=user)
 
 
+class ContactUs(graphene.Mutation):
+    '''Creates a contact email to admins'''
+    # items return from the mutation
+    user = graphene.String()
+
+    class Arguments:
+        '''Arguments that will be passed to the mutation'''
+        name = graphene.String()
+        email = graphene.String()
+        mobile_no = graphene.String()
+        message = graphene.String()
+
+    def mutate(self, info, **kwargs):
+        '''Receive the user details then sends email to admin'''
+
+        new_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
+        USER_VALIDATOR.check_email_validity(new_email)
+        message = render_to_string('send_contact.html', {
+            'email': new_email,
+            'name': kwargs.get('name'),
+            'mobile_no': kwargs.get('mobile_no'),
+            'message': kwargs.get('message')
+        })
+        mail_subject = 'Help Request from '+kwargs.get('name')
+        send_mail(message, mail_subject)
+        return ContactUs(user=kwargs.get('name'))
+
+
+class Subscribe(graphene.Mutation):
+    '''Users subscribe to newsletters'''
+    # items return from the mutation
+    success = graphene.String()
+
+    class Arguments:
+        '''Arguments that will be passed to the mutation'''
+        email = graphene.String()
+
+    def mutate(self, info, **kwargs):
+        '''Receive the user email and saves the data'''
+        new_email = USER_VALIDATOR.clean_email(kwargs.get('email'))
+        USER_VALIDATOR.check_email_validity(new_email)
+        try:
+            user = Subscription.objects.get(email=new_email)
+            if user:
+                return GraphQLError('You are already subscribed to our newsletters')
+        except BaseException:
+            new_subscriber = Subscription(
+                email=new_email
+            )
+            new_subscriber.save()
+            return Subscribe(success="You are successfully subscribed")
+
+
 class UpdatePassword(graphene.Mutation):
     '''Activates a user during registration'''
     # items return from the mutation
@@ -202,17 +255,17 @@ class UpdateProfile(graphene.Mutation):
         )
         try:
             user = User.objects.get(email=valid_email)
-            user.username=valid_username
-            user.bio=bio
-            user.image=image
+            user.username = valid_username
+            user.bio = bio
+            user.image = image
             country_id = Country.objects.get(code=country)
-            user.country=country_id
+            user.country = country_id
             user.save()
             return UpdateProfile(user=user)
         except Exception as e:
             print(e)
-            raise GraphQLError('There has been an error updating your profile.' 
-            +' Try again later')
+            raise GraphQLError('There has been an error updating your profile.'
+                               + ' Try again later')
 
 
 class DeactivateAccount(graphene.Mutation):
@@ -242,8 +295,9 @@ class DeactivateAccount(graphene.Mutation):
         except ObjectDoesNotExist:
             raise GraphQLError("The user does not exist")
 
+
 class SocialAuth(graphql_social_auth.SocialAuthMutation):
-    
+
     user = graphene.Field(UserType)
     token = graphene.String()
 
@@ -261,14 +315,20 @@ class Mutation(graphene.ObjectType):
     social_auth = SocialAuth.Field()
     update_password = UpdatePassword.Field()
     update_profile = UpdateProfile.Field()
+    contact_us = ContactUs.Field()
+    subscribe_me = Subscribe.Field()
     deactivate_account = DeactivateAccount.Field()
 
 
-def send_mail(message, mail_subject, to_email):
+def send_mail(message, mail_subject, to_email=None):
     try:
         stripped_message = strip_tags(message)
-        email = EmailMultiAlternatives(
-            mail_subject, stripped_message, to=[to_email])
+        if to_email:
+            email = EmailMultiAlternatives(
+                mail_subject, stripped_message, to=[to_email])
+        else:
+            email = EmailMultiAlternatives(
+                mail_subject, stripped_message, to=[os.environ['FADHILA_HELP_DESK']])
         email.attach_alternative(message, "text/html")
         email.send()
     except BaseException as error:

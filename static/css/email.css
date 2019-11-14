@@ -40,6 +40,10 @@ body{
     box-shadow: 0px 0px 10px #00000059;
     margin: auto;
 }
+.message{
+    padding-left: 3%;
+    color: rgb(63, 63, 63);
+}
 @media screen and (max-width: 768px){
     body{
        width:100%; 

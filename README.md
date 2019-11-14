@@ -52,6 +52,7 @@ pip install -r requirements.txt
     export DB_PORT="5432"
     export TIME_DELTA="30"
     export EMAIL_HOST="smtp.gmail.com"
+    export FADHILA_HELP_DESK="help_desk_mail"
     export EMAIL_HOST_USER="sample_email"
     export EMAIL_HOST_PASSWORD="sample_password"
     export EMAIL_PORT=587

@@ -8,9 +8,11 @@ from django.contrib.auth.models import (
 from messenger import settings
 from messenger.apps.country.models import Country
 
+
 class UserManager(BaseUserManager):
     '''Overrides some methods in the base user manager
     to enable tweaking of some aspects'''
+
     def create_user(self, username, email, password=None):
         '''A helper method in the creation of a super user'''
         user = self.model(username=username, email=self.normalize_email(email))
@@ -49,3 +51,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+class Subscription(models.Model):
+    '''Defines the attributes in the user model'''
+    email = models.EmailField(db_index=True, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.email
