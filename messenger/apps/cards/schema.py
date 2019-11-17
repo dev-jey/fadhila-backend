@@ -7,6 +7,7 @@ from graphql_extensions.auth.decorators import login_required
 from datetime import timedelta
 from django.utils import timezone
 from .objects import CardType, CardPaginatedType
+from messenger.apps.feedback.models import Feedback
 from .models import Card
 # from .utils import get_paginator, items_getter_helper
 
@@ -15,14 +16,16 @@ class AllCards(graphene.ObjectType):
     count = graphene.Int()
     cards = graphene.List(CardType)
 
+
 class Query(graphene.AbstractType):
     '''Defines a query for all cards'''
+
     def __init__(self):
         pass
 
     all_cards = graphene.Field(CardPaginatedType, get_all=graphene.Boolean(),
-                              search=graphene.String(), owner=graphene.Boolean(),
-                              from_date=graphene.String(), to=graphene.String())
+                               search=graphene.String(), owner=graphene.Boolean(),
+                               from_date=graphene.String(), to=graphene.String())
 
     @login_required
     def resolve_all_cards(self, info, **kwargs):
@@ -30,8 +33,8 @@ class Query(graphene.AbstractType):
         search = kwargs.get('search')
         get_all = kwargs.get('get_all')
         filter = (
-                Q(serial__icontains='')
-            )
+            Q(serial__icontains='')
+        )
         if search:
             filter = (
                 Q(serial__icontains=search)
@@ -90,6 +93,7 @@ class CreateCard(graphene.Mutation):
             print(e)
             raise GraphQLError('Error generating cards', e)
 
+
 class VerifyCard(graphene.Mutation):
     count = graphene.Int()
     card = graphene.Field(CardType)
@@ -118,8 +122,31 @@ class VerifyCard(graphene.Mutation):
             raise GraphQLError("You have entered an invalid serial number")
 
 
+class TrackCard(graphene.Mutation):
+    count = graphene.Int()
+    card = graphene.Field(CardType)
+
+    class Arguments:
+        serial = graphene.String()
+
+    @login_required
+    def mutate(self, info, **kwargs):
+        serial = kwargs.get('serial', None)
+        if not serial:
+            raise GraphQLError("Enter a serial no")
+        try:
+            card = Card.objects.get(serial=serial)
+        except BaseException as e:
+            print(e)
+            raise GraphQLError("You have entered an invalid serial number")
+        feedback_count = Feedback.objects.filter(card=card.id).count()
+        if feedback_count == 0:
+            return GraphQLError("This card has no feedback yet")
+        return TrackCard(card=card, count=feedback_count)
+
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
     # create_card = CreateCard.Field()
     verify_card = VerifyCard.Field()
+    track_card = TrackCard.Field()
