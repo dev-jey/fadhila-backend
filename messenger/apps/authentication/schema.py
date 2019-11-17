@@ -107,11 +107,15 @@ class ActivateUser(graphene.Mutation):
         and activate the user in the db'''
         uidb64 = kwargs.get('uidb64')
         access_token = kwargs.get('access_token')
-        user = validate_uid_and_token(uidb64, access_token)
-        user.is_verified = True
-        token = TOKEN_GENERATOR.generate(user.email)
-        user.save()
-        return ActivateUser(user=user, token=token)
+        try:
+            user = validate_uid_and_token(uidb64, access_token)
+            user.is_verified = True
+            token = TOKEN_GENERATOR.generate(user.email)
+            user.save()
+            return ActivateUser(user=user, token=token)
+        except BaseException as e:
+            print(e)
+            raise GraphQLError("An error occured in activating account")
 
 
 class ResetPassword(graphene.Mutation):
@@ -227,6 +231,36 @@ class UpdatePassword(graphene.Mutation):
         return UpdatePassword(user=user)
 
 
+
+class ChangePassword(graphene.Mutation):
+    '''Activates a user during registration'''
+    # items return from the mutation
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        '''Arguments that will be passed to the mutation'''
+        current_password = graphene.String()
+        password = graphene.String()
+        confirm_password = graphene.String()
+
+    def mutate(self, info, **kwargs):
+        '''change password in the db'''
+        current_password = USER_VALIDATOR.clean_password(kwargs.get('current_password'))
+        password = USER_VALIDATOR.clean_password(kwargs.get('password'))
+        confirm_password = USER_VALIDATOR.clean_password(
+            kwargs.get('confirm_password'))
+        pass_match = info.context.user.check_password(current_password)
+        if not pass_match:
+            return GraphQLError('The current password is wrong')
+        USER_VALIDATOR.validate_password(current_password)
+        if password != confirm_password:
+            return GraphQLError('The new passwords do not match')
+        info.context.user.set_password(password)
+        info.context.user.save()
+        return ChangePassword(user=info.context.user)
+
+
+
 class UpdateProfile(graphene.Mutation):
     '''Handles the updating of a user information'''
     # Returns an object of type user
@@ -252,7 +286,7 @@ class UpdateProfile(graphene.Mutation):
         valid_username = USER_VALIDATOR.clean_username(username)
         valid_email = USER_VALIDATOR.clean_email(email)
         USER_VALIDATOR.check_already_existing_during_update(
-            info, valid_username, valid_email
+            info, valid_username
         )
         try:
             user = User.objects.get(email=valid_email)
@@ -318,6 +352,7 @@ class Mutation(graphene.ObjectType):
     update_profile = UpdateProfile.Field()
     contact_us = ContactUs.Field()
     subscribe_me = Subscribe.Field()
+    change_password = ChangePassword.Field()
     deactivate_account = DeactivateAccount.Field()
 
 

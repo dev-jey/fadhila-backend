@@ -89,11 +89,11 @@ class UserValidations(object):
 
 
 
-    def check_already_existing_during_update(self, info, username, email):
+    def check_already_existing_during_update(self, info, username):
         '''Checks if the details are already taken by another user
         before updating the current user info'''
         try:
-            if User.objects.exclude(email=info.context.user.email).filter(username=username.casefold()).exists():
+            if User.objects.exclude(email=info.context.user.email).filter(username__iexact=username):
                 raise GraphQLError('Username already taken')
         except ValidationError:
             return True
