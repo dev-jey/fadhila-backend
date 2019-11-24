@@ -17,3 +17,11 @@ class UserType(DjangoObjectType):
             "username": ["exact", "icontains", "istartswith"]
         }
         exclude_fields = ('created_at', 'updated_at','password')
+
+class UserPaginatedType(graphene.ObjectType):
+    count = graphene.Int()
+    page = graphene.Int()
+    pages = graphene.Int()
+    has_next = graphene.Boolean()
+    has_prev = graphene.Boolean()
+    items = graphene.List(UserType)

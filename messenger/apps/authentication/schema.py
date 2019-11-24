@@ -8,14 +8,16 @@ from django.core.exceptions import ObjectDoesNotExist
 from graphql_extensions.auth.decorators import login_required
 from django.utils.encoding import force_bytes, force_text
 from django.utils.html import strip_tags
+from django.db.models import Q
 from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
+from messenger.apps.cards.utils import get_paginator, items_getter_helper
 
 # Local imports
 from messenger.tokens import ACCOUNT_ACTIVATION_TOKEN
 from messenger.apps.country.models import Country
-from .objects import UserType
+from .objects import UserType, UserPaginatedType
 from .models import User, Subscription
 from .helpers import UserValidations
 from .token_generator import TokenGenerator
@@ -37,6 +39,9 @@ class Query(graphene.AbstractType):
                                 access_token=graphene.String())
     current_user = graphene.Field(UserType)
 
+    all_users = graphene.Field(UserPaginatedType, page=graphene.Int(),
+                               search=graphene.String(), kenyan=graphene.Boolean())
+
     def resolve_valid_link(self, info, **kwargs):
         '''confirm if the given token and uidb64 are valid,
         and activate the user in the db'''
@@ -52,6 +57,28 @@ class Query(graphene.AbstractType):
         if user.is_anonymous:
             return GraphQLError('Kindly login to continue')
         return user
+    
+    @login_required
+    def resolve_all_users(self, info, **kwargs):
+        page = kwargs.get('page')
+        search = kwargs.get('search')
+        kenyan = kwargs.get('kenyan')
+        _filter = (
+            Q(email__icontains='')
+        )
+        users = User.objects.all().order_by('email')
+        try:
+            if search:
+                _filter = (
+                    Q(email__icontains=search)
+                )
+                users = User.objects.filter(_filter).order_by('email')
+            if kenyan:
+                users = User.objects.filter(country__code='KE').filter(_filter).order_by('email')
+            return items_getter_helper(page, users, UserPaginatedType)
+        except Exception as e:
+            print(e)
+            raise GraphQLError('An error occured while getting users')
 
 
 class CreateUser(graphene.Mutation):
