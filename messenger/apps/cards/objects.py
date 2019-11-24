@@ -2,7 +2,7 @@
 from graphene import Node
 import graphene
 from graphene_django.types import DjangoObjectType
-from .models import Card
+from .models import Card, Tracker
 
 
 class CardType(DjangoObjectType):
@@ -18,6 +18,15 @@ class CardType(DjangoObjectType):
             "created_at":["exact"],
             "updated_at":["exact"]
         }
+
+
+class TrackerType(DjangoObjectType):
+    '''Defines the attributes to be in the type'''
+    class Meta:
+        '''Specifies some meta data such
+         as filtering options'''
+        model = Tracker
+        interfaces = (Node, )
 
 class CardPaginatedType(graphene.ObjectType):
     count = graphene.Int()

@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.utils import timezone
 from .objects import CardType, CardPaginatedType
 from messenger.apps.feedback.models import Feedback
-from .models import Card
+from .models import Card, Tracker
 # from .utils import get_paginator, items_getter_helper
 
 
@@ -133,15 +133,27 @@ class TrackCard(graphene.Mutation):
     def mutate(self, info, **kwargs):
         serial = kwargs.get('serial', None)
         if not serial:
-            raise GraphQLError("Enter a serial no")
+            return GraphQLError("Enter a serial no")
         try:
             card = Card.objects.get(serial=serial)
         except BaseException as e:
             print(e)
-            raise GraphQLError("You have entered an invalid serial number")
+            return GraphQLError("You have entered an invalid serial number")
+        if not card.owner:
+            return GraphQLError("This card is valid but not registered by the owner to our system yet")
+        if card.owner == info.context.user:
+            return GraphQLError("This card is registered under your name. Visit your profile to view feedback on this card anytime.")
         feedback_count = Feedback.objects.filter(card=card.id).count()
         if feedback_count == 0:
             return GraphQLError("This card has no feedback yet")
+        tracking = Tracker.objects.filter(serial=serial).filter(tracker=info.context.user).count()
+        if tracking > 0:
+            return GraphQLError("You are already tracking this card. View the feedback on your profile page")
+        track_instance = Tracker(
+            serial=serial,
+            tracker=info.context.user
+        )
+        track_instance.save()
         return TrackCard(card=card, count=feedback_count)
 
 

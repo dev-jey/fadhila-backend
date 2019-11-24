@@ -16,7 +16,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from messenger.apps.authentication.schema import send_mail
-from django.utils import timezone
 
 from .models import Card
 

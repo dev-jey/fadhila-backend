@@ -1,12 +1,19 @@
 import graphene
+from django.utils import timezone
+from datetime import timedelta
 from graphql_extensions.auth.decorators import login_required
 from messenger.apps.cards.models import Card
-from messenger.apps.cards.objects import CardType
+from messenger.apps.cards.objects import CardType, TrackerType
 from .models import Feedback
+from messenger.apps.cards.models import Tracker
 from .objects import FeedbackType
 from graphql import GraphQLError
 from django.core.exceptions import ObjectDoesNotExist
 
+
+class AllFeedback(graphene.ObjectType):
+    tracking_details = graphene.Field(TrackerType)
+    feedback = graphene.List(FeedbackType)
 
 class Query(graphene.AbstractType):
     '''Defines a query for a card's feedback'''
@@ -14,7 +21,7 @@ class Query(graphene.AbstractType):
     def __init__(self):
         pass
 
-    all_feedback = graphene.List(FeedbackType, card=graphene.String())
+    all_feedback = graphene.Field(AllFeedback, card=graphene.String())
 
     @login_required
     def resolve_all_feedback(self, info, **kwargs):
@@ -22,12 +29,27 @@ class Query(graphene.AbstractType):
         try:
             card = kwargs.get('card', None).strip()
             card_id = Card.objects.get(serial=card)
-            feedback = Feedback.objects.filter(
-                card=card_id.id).order_by('card')
-            return feedback
         except ObjectDoesNotExist as e:
             print(e)
             raise GraphQLError("Card not found!")
+        if not card_id.owner:
+            return GraphQLError("This card is valid but not registered by the owner to our system yet")
+        tracking_details = None
+        if card_id.owner != info.context.user:
+            try:
+                tracking_details = Tracker.objects.get(serial=card_id.serial, tracker=info.context.user.id)
+            except Exception as e:
+                print(e)
+                return GraphQLError('You are not tracking this card yet')
+            
+            tracking_count = Tracker.objects.filter(serial=card_id.serial).filter(tracker=info.context.user.id).filter(
+                    created_at__gte=timezone.now() - timedelta(days=7)
+                )
+            if not tracking_count:
+                return GraphQLError('You have used the maximum time allocated for tracking this card: 7 days')
+        feedback = Feedback.objects.filter(
+            card=card_id.id).order_by('card')
+        return AllFeedback(feedback=feedback, tracking_details=tracking_details)
 
 
 class AddFeedback(graphene.Mutation):
