@@ -28,6 +28,15 @@ class TrackerType(DjangoObjectType):
         model = Tracker
         interfaces = (Node, )
 
+
+class TrackerPaginatedType(graphene.ObjectType):
+    count = graphene.Int()
+    page = graphene.Int()
+    pages = graphene.Int()
+    has_next = graphene.Boolean()
+    has_prev = graphene.Boolean()
+    items = graphene.List(TrackerType)
+
 class CardPaginatedType(graphene.ObjectType):
     count = graphene.Int()
     cards = graphene.List(CardType)

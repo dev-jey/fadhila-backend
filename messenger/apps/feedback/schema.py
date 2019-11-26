@@ -3,13 +3,13 @@ from django.utils import timezone
 from datetime import timedelta
 from graphql_extensions.auth.decorators import login_required
 from messenger.apps.cards.models import Card
-from messenger.apps.cards.objects import CardType, TrackerType
+from messenger.apps.cards.objects import CardType, TrackerType, TrackerPaginatedType
 from .models import Feedback
 from messenger.apps.cards.models import Tracker
 from .objects import FeedbackType
 from graphql import GraphQLError
 from django.core.exceptions import ObjectDoesNotExist
-
+from messenger.apps.cards.utils import items_getter_helper
 
 class AllFeedback(graphene.ObjectType):
     tracking_details = graphene.Field(TrackerType)
@@ -22,6 +22,19 @@ class Query(graphene.AbstractType):
         pass
 
     all_feedback = graphene.Field(AllFeedback, card=graphene.String())
+
+    all_tracking_cards = graphene.Field(TrackerPaginatedType, page=graphene.Int())
+
+
+    @login_required
+    def resolve_all_tracking_cards(self, info, **kwargs):
+        '''Resolves all the cards being tracked by the current user'''
+        try:
+            tracking_details = Tracker.objects.filter(tracker=info.context.user.id)
+            return items_getter_helper(kwargs.get("page"), tracking_details, TrackerPaginatedType)
+        except Exception as e:
+            print(e)
+            raise GraphQLError("You are not tracking any card currently")
 
     @login_required
     def resolve_all_feedback(self, info, **kwargs):
