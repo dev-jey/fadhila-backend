@@ -16,8 +16,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from messenger.apps.authentication.schema import send_mail
-
+from messenger.apps.cards.schema import send_cards_for_abroad_orders
 from .models import Card
+# from weasyprint import HTML, CSS
+# from django.core.mail import EmailMessage
 
 
 logger = get_task_logger(__name__)
@@ -28,6 +30,7 @@ logger = get_task_logger(__name__)
                ignore_result=True)
 def task_create_random_serials():
     try:
+        # send_cards_for_abroad_orders()
         order_set = check_available_orders()
         sum_of_regular = order_set.filter(address_id__isnull=False).aggregate(
             Sum('no_of_regular_batches'))['no_of_regular_batches__sum']

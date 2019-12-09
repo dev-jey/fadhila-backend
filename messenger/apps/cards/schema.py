@@ -1,6 +1,7 @@
 '''Cards app schema'''
 import graphene
 import uuid
+import os
 from django.db.models import Q
 from graphql import GraphQLError
 from graphql_extensions.auth.decorators import login_required
@@ -9,7 +10,33 @@ from django.utils import timezone
 from .objects import CardType, CardPaginatedType
 from messenger.apps.feedback.models import Feedback
 from .models import Card, Tracker
+from django.template.loader import render_to_string
+from weasyprint import HTML, CSS
+from django.core.mail import EmailMessage
+from messenger import settings
 # from .utils import get_paginator, items_getter_helper
+
+def send_cards_for_abroad_orders():
+    try:
+        serials_regular = ['SERAW2', 'PORMFF', 'POEDDK']
+        serials_premium = ['REDFTD']
+        to_email = "fadhilanoreply@gmail.com"
+        html = render_to_string('pdf.html', context={
+            'serials_premium':serials_premium, 'serials_regular': serials_regular
+            })
+        result = HTML(string=html, base_url=os.environ['CURRENT_BACKEND_DOMAIN'])
+        pdf = result.write_pdf(
+            stylesheets=[CSS(settings.STATIC_ROOT +  '/css/email.css')], presentational_hints=True
+            , zoom=1.0
+        )
+        subject = "Fadhila Network Cards Order"
+        email = EmailMessage(subject, body=pdf, from_email=os.environ['EMAIL_HOST_USER'], to=[to_email])
+        email.attach("cards.pdf", pdf, "application/pdf")
+        email.content_subtype = "pdf"
+        email.encoding = 'us-ascii'
+        email.send()
+    except Exception as e:
+        print(e)
 
 
 class AllCards(graphene.ObjectType):
@@ -27,9 +54,10 @@ class Query(graphene.AbstractType):
                                search=graphene.String(), owner=graphene.Boolean(),
                                from_date=graphene.String(), to=graphene.String())
 
-    @login_required
+    # @login_required
     def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
+        send_cards_for_abroad_orders()
         search = kwargs.get('search')
         get_all = kwargs.get('get_all')
         filter = (
