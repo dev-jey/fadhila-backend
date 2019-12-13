@@ -26,7 +26,7 @@ class Query(graphene.AbstractType):
         pass
 
     all_orders = graphene.Field(OrdersPaginatedType, page=graphene.Int(), get_all=graphene.Boolean(),
-                                search=graphene.String(), status=graphene.String(), foreign=graphene.Boolean(),
+                                search=graphene.String(), status=graphene.String(), foreign=graphene.String(),
                                 from_date=graphene.String(), to=graphene.String()
                                 )
     dashboard_stats = graphene.Field(StatsType)
@@ -92,8 +92,10 @@ class Query(graphene.AbstractType):
         get_all = kwargs.get('get_all')
         status = kwargs.get('status', None)
         foreign = kwargs.get('foreign')
-        if not foreign:
+        if foreign == '0':
             foreign = False
+        else:
+            foreign = True
         from_date = kwargs.get('from_date', None)
         to = kwargs.get('to', None)
         filter = (

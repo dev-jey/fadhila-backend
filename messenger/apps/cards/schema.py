@@ -11,32 +11,9 @@ from .objects import CardType, CardPaginatedType
 from messenger.apps.feedback.models import Feedback
 from .models import Card, Tracker
 from django.template.loader import render_to_string
-from weasyprint import HTML, CSS
-from django.core.mail import EmailMessage
-from messenger import settings
+from .tasks import task_create_random_serials
 # from .utils import get_paginator, items_getter_helper
 
-def send_cards_for_abroad_orders():
-    try:
-        serials_regular = ['SERAW2', 'PORMFF', 'POEDDK']
-        serials_premium = ['REDFTD']
-        to_email = "fadhilanoreply@gmail.com"
-        html = render_to_string('pdf.html', context={
-            'serials_premium':serials_premium, 'serials_regular': serials_regular
-            })
-        result = HTML(string=html, base_url=os.environ['CURRENT_BACKEND_DOMAIN'])
-        pdf = result.write_pdf(
-            stylesheets=[CSS(settings.STATIC_ROOT +  '/css/email.css')], presentational_hints=True
-            , zoom=1.0
-        )
-        subject = "Fadhila Network Cards Order"
-        email = EmailMessage(subject, body=pdf, from_email=os.environ['EMAIL_HOST_USER'], to=[to_email])
-        email.attach("cards.pdf", pdf, "application/pdf")
-        email.content_subtype = "pdf"
-        email.encoding = 'us-ascii'
-        email.send()
-    except Exception as e:
-        print(e)
 
 
 class AllCards(graphene.ObjectType):
@@ -54,10 +31,9 @@ class Query(graphene.AbstractType):
                                search=graphene.String(), owner=graphene.Boolean(),
                                from_date=graphene.String(), to=graphene.String())
 
-    # @login_required
+    @login_required
     def resolve_all_cards(self, info, **kwargs):
         '''Resolves all the cards'''
-        send_cards_for_abroad_orders()
         search = kwargs.get('search')
         get_all = kwargs.get('get_all')
         filter = (
@@ -88,8 +64,6 @@ def check_other_filters(kwargs, filter):
     return Card.objects.filter(filter).filter(created_at__range=(from_date, to)).filter(owner__isnull=owner)
 
 
-# THIS MUTATION IS NOT IN USE ANY MORE SINCE
-# THERE IS A CELERY JOB FOR THIS!!!!!!!!!!!!!!!!
 
 
 class CreateCard(graphene.Mutation):
@@ -99,21 +73,36 @@ class CreateCard(graphene.Mutation):
     class Arguments:
         '''Lists the arguments required 
         in generating cards'''
-        no_of_cards = graphene.Int()
+        no_of_regular = graphene.Int()
+        no_of_premium = graphene.Int()
 
     @login_required
     def mutate(self, info, **kwargs):
         '''Generate random x number of cards'''
         try:
+            task_create_random_serials()
             stringLength = 6
-            no_of_cards = kwargs.get('no_of_cards', None)
-            for i in range(no_of_cards):
+            card = {}
+            no_of_regular = kwargs.get('no_of_regular', None)
+            no_of_premium = kwargs.get('no_of_premium', None)
+            for i in range(no_of_premium):
                 # get a random string in a UUID fromat
                 randomString = uuid.uuid4().hex
                 # convert it in a uppercase letter and trim to your size.
                 serial = randomString.upper()[0:stringLength]
                 card = Card(
-                    serial=serial
+                    serial=serial,
+                    card_type='P'
+                )
+                card.save()
+            for i in range(no_of_regular):
+                # get a random string in a UUID fromat
+                randomString = uuid.uuid4().hex
+                # convert it in a uppercase letter and trim to your size.
+                serial = randomString.upper()[0:stringLength]
+                card = Card(
+                    serial=serial,
+                    card_type='N'
                 )
                 card.save()
             return CreateCard(card=card)
@@ -187,6 +176,6 @@ class TrackCard(graphene.Mutation):
 
 class Mutation(graphene.ObjectType):
     '''All the mutations for this schema are registered here'''
-    # create_card = CreateCard.Field()
+    create_card = CreateCard.Field()
     verify_card = VerifyCard.Field()
     track_card = TrackCard.Field()

@@ -5,8 +5,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/pdf.css' %}">
     <title>Cards</title>
 </head>
@@ -14,49 +16,61 @@
 <body>
     <div>
         <div class="pdf-content">
-            <h2>Thanks for shopping at Fadhila.</h2>
-            <p>Here are your cards</p>
-            <h5>You have received
+            <br><br><br>
+            <br><br><br>
+            <div class="logo"></div>
+            <br><br><br><br><br><br><br><br><br>
+            <h1>Thanks for shopping at Fadhila.</h1>
+            <i>You are awesome!</i>
+            <h3>Order Details</h3>
+            <p class="text-muted">Tracking Number: {{order.tracking_number}}</p>
+            <p class="text-muted">Owner: {{order.owner.username}}</p>
+            <p class="text-muted">Total Cost: {{order.total_cost}}</p>
+            <p class="text-muted">Ordered on: {{order.created_at}}</p>
+            <p class="text-muted">You have received
                 <ul>
-                    <li>{{serials_premium.length}} premium cards</li>
-                    <li>{{serials_regular.length}} regular cards</li>
+                    <li class="text-danger">{% if serials_premium %}
+                        {{ serials_premium|length }}
+                        {% else %}
+                        0
+                        {% endif %}- premium cards</li>
+                    <li class="text-danger">{% if serials_regular %}
+                        {{ serials_regular|length }}
+                        {% else %}
+                        0
+                        {% endif %} - regular cards</li>
                 </ul>
-            </h5>
-            <p>Instructions</p>
-            <p>
+            </p>
+            <h3>Instructions</h3>
+            <p class="text-muted">
                 Once you receive the cards, print them at your nearest printing store. Then, login to your dashboard and
                 enter the serial number of your card in the
-                Verification field to verify. Once verified your card will be visible to you on your dashboard and you
+                Verification field to verify. Once verified your cards will be visible to you on your dashboard and you
                 can track it from there. Ideally, you should verify your batch of 8 cards the moment you receive
                 them
             </p>
-            <br><br><br><br>
-            <div class="row card-row">
+            <hr>
+        <br></br><br></br>
+        <div class="footer">
+            <p>Fadhila Team &copy; 2019
+                    <a href="www.fadhilanetwork.com/contactus" class="text-muted">Contact Us</a></p>
+        </div>
+
                 {% for serial in serials_premium  %}
-                <div class="
-                    col-lg-6 col-sm-6 d-flex align-items-center card-slot">
-                    <img src="{% static 'images/programmer.png' %}" alt="programmer image" class="w-100  card-img" />
-                    <h3 class="position-absolute ml-auto serial-txt">{{serial}}</h3>
+                <div class="mx-auto content w-40">
+                    <h3 class="serial-txt">{{serial}}</h3>
                 </div>
                 {% endfor %}
-            </div>
-
-            <div class="row card-row">
-                    {% for serial in serials_regular  %}
-                    <div class="
-                        col-lg-6 col-sm-6 d-flex align-items-center card-slot">
-                        <img src="{% static 'images/programmer.png' %}" alt="programmer image" class="w-100  card-img" />
-                        <h3 class="position-absolute ml-auto serial-txt">{{serial}}</h3>
-                    </div>
-                    {% endfor %}
+                {% for serial in serials_regular  %}
+                <div class="mx-auto content w-40">
+                    <h3 class="serial-txt">{{serial}}</h3>
                 </div>
-            <br></br><br></br>
-            <div class="footer">
-                <p>Fadhila Team &copy; 2019</p>
-            </div>
+                {% endfor %}
         </div>
     </div>
-
+    </div>
+    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
 </body>
 
 </html>

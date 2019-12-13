@@ -16,46 +16,40 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from messenger.apps.authentication.schema import send_mail
-from messenger.apps.cards.schema import send_cards_for_abroad_orders
 from .models import Card
+
+from weasyprint import HTML, CSS
+from django.core.mail import EmailMessage
+from messenger import settings
 # from weasyprint import HTML, CSS
 # from django.core.mail import EmailMessage
 
 
-logger = get_task_logger(__name__)
+
+# logger = get_task_logger(__name__)
 
 
-@periodic_task(run_every=(crontab(minute='*/1')),
-               name="task_create_random_serials",
-               ignore_result=True)
+# @periodic_task(run_every=(crontab(minute='*/1')),
+#                name="task_create_random_serials",
+#                ignore_result=True)
 def task_create_random_serials():
     try:
-        # send_cards_for_abroad_orders()
         order_set = check_available_orders()
-        sum_of_regular = order_set.filter(address_id__isnull=False).aggregate(
+        sum_of_regular = order_set.filter(address_id__isnull=True).aggregate(
             Sum('no_of_regular_batches'))['no_of_regular_batches__sum']
-        sum_of_premium = order_set.filter(address_id__isnull=False).aggregate(
+        sum_of_premium = order_set.filter(address_id__isnull=True).aggregate(
             Sum('no_of_premium_batches'))['no_of_premium_batches__sum']
-        loop_through_Cards('regular', sum_of_regular, False)
-        loop_through_Cards('premium', sum_of_premium, False)
-
         internationals = order_set.filter(address_id__isnull=True)
         for every_order in internationals:
-            serials_regular = loop_through_Cards('regular', every_order.no_of_regular_batches, True)
-            serials_premium = loop_through_Cards('premium', every_order.no_of_premium_batches, True)
-            message = render_to_string('send_cards.html', {
-                'order': every_order,
-                'serials_premium':serials_premium,
-                'serials_regular':serials_regular
-            })
-            mail_subject = 'Here are your cards.'
+            serials_regular = loop_through_Cards('regular', every_order.no_of_regular_batches)
+            serials_premium = loop_through_Cards('premium', every_order.no_of_premium_batches)
             to_email = every_order.owner.email
-            send_mail(message, mail_subject, to_email)
-
-        logger.info("Created "+str(sum_of_premium+sum_of_regular)+" cards")
+            send_cards_for_abroad_orders(serials_regular, serials_premium, to_email, every_order)
+        # logger.info("Created "+str(sum_of_premium+sum_of_regular)+" cards")
         return "Created "+str(sum_of_premium+sum_of_regular)+" cards"
     except BaseException as e:
-        logger.info(e)
+        # logger.info(e, 'No international orders available')
+        print(e)
 
 
 def check_available_orders():
@@ -63,7 +57,7 @@ def check_available_orders():
     return Orders.objects.filter(status="S").filter(
         created_at__gte=timezone.now() - timedelta(days=1))
 
-def loop_through_Cards(card_type, no, international):
+def loop_through_Cards(card_type, no):
     stringLength = 6
     serial_numbers = []
     for i in range(no):
@@ -78,10 +72,30 @@ def loop_through_Cards(card_type, no, international):
             )
         if card_type == 'regular':
             card = Card(
-                card_type='R',
+                card_type='N',
                 serial=serial
             )
         card.save()
         serial_numbers.append(card.serial)
-    if international:
-        return serial_numbers
+    return serial_numbers
+
+
+
+def send_cards_for_abroad_orders(serials_regular, serials_premium, to_email, order):
+    try:
+        html = render_to_string('pdf.html', context={
+            'serials_premium':serials_premium, 'serials_regular': serials_regular, 'order': order
+            })
+        result = HTML(string=html, base_url=os.environ['CURRENT_BACKEND_DOMAIN'])
+        pdf = result.write_pdf(
+            stylesheets=[CSS(settings.STATIC_ROOT +  '/css/email.css')], presentational_hints=True
+            , zoom=1.0
+        )
+        subject = "Fadhila Network Cards Order"
+        email = EmailMessage(subject, body=pdf, from_email=os.environ['EMAIL_HOST_USER'], to=[to_email])
+        email.attach("cards.pdf", pdf, "application/pdf")
+        email.content_subtype = "pdf"
+        email.encoding = 'us-ascii'
+        email.send()
+    except Exception as e:
+        print(e)

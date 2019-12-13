@@ -40,7 +40,7 @@ class Query(graphene.AbstractType):
     current_user = graphene.Field(UserType)
 
     all_users = graphene.Field(UserPaginatedType, page=graphene.Int(),
-                               search=graphene.String(), kenyan=graphene.Boolean())
+                               search=graphene.String(), kenyan=graphene.Int())
 
     def resolve_valid_link(self, info, **kwargs):
         '''confirm if the given token and uidb64 are valid,
@@ -73,8 +73,10 @@ class Query(graphene.AbstractType):
                     Q(email__icontains=search)
                 )
                 users = User.objects.filter(_filter).order_by('email')
-            if kenyan:
+            if kenyan == 0:
                 users = User.objects.filter(country__code='KE').filter(_filter).order_by('email')
+            if kenyan == 1:
+                users = User.objects.exclude(country__code='KE').filter(_filter).order_by('email')
             return items_getter_helper(page, users, UserPaginatedType)
         except Exception as e:
             print(e)
