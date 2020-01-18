@@ -67,6 +67,12 @@ pip install -r requirements.txt
     export MPESA_CALLBACK_URL="https://{sample_code}.ngrok.io/mpesa/confirmation"
     export MPESA_SHORT_CODE="sample_paybill_number eg. 174379"
     export MPESA_PASSKEY="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+    export PRICE_OF_REGULAR="1499"
+    export PRICE_OF_PREMIUM="2499"
+    export REDIS_URL='redis://localhost:6379'
+    export PESAPAL_KEY='key'
+    exprt PESAPAL_SECRET='secret'
+    export PESAPAL_TESTING=Boolean
     ```
     7. Source .env to set the configuration variables:
     ```

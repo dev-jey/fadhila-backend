@@ -16,6 +16,7 @@ class Query(cards_schema.Query,
             country_schema.Query,
             locations_schema.Query,
             feedback_schema.Query,
+            payments_schema.Query,
             graphene.ObjectType):
     '''Registers all the queries in each app's schema'''
     pass
