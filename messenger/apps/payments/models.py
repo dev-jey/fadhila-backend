@@ -42,6 +42,7 @@ class PaymentsTracker(models.Model):
     '''Defines attributes of the payments model'''
     pesapal_merchant_reference = models.CharField(max_length=100)
     pesapal_transaction_tracking_id = models.CharField(max_length=100)
+    tracking_number = models.CharField(max_length=100)
     order = models.ForeignKey(Orders, on_delete=models.CASCADE, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
