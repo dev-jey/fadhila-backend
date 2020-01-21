@@ -12,65 +12,61 @@
     <link rel="stylesheet" href="{% static 'css/pdf.css' %}">
     <title>Cards</title>
 </head>
-
-<body>
-    <div>
-        <div class="pdf-content">
-            <br><br><br>
-            <br><br><br>
-            <div class="logo"></div>
-            <br><br><br><br><br><br><br><br><br>
-            <h1>Thanks for shopping at Fadhila.</h1>
-            <i>You are awesome!</i>
-            <h3>Order Details</h3>
-            <p class="text-muted">Tracking Number: {{order.tracking_number}}</p>
-            <p class="text-muted">Owner: {{order.owner.username}}</p>
-            <p class="text-muted">Total Cost: {{order.total_cost}}</p>
-            <p class="text-muted">Ordered on: {{order.created_at}}</p>
-            <p class="text-muted">You have received
-                <ul>
-                    <li class="text-danger">{% if serials_premium %}
-                        {{ serials_premium|length }}
-                        {% else %}
-                        0
-                        {% endif %}- premium cards</li>
-                    <li class="text-danger">{% if serials_regular %}
-                        {{ serials_regular|length }}
-                        {% else %}
-                        0
-                        {% endif %} - regular cards</li>
-                </ul>
-            </p>
-            <h3>Instructions</h3>
-            <p class="text-muted">
-                Once you receive the cards, print them at your nearest printing store. Then, login to your dashboard and
-                enter the serial number of your card in the
-                Verification field to verify. Once verified your cards will be visible to you on your dashboard and you
-                can track it from there. Ideally, you should verify your batch of 8 cards the moment you receive
-                them
-            </p>
-            <hr>
+<div>
+    <div class="pdf-content">
+        <br><br><br>
+        <br><br><br>
+        <div class="logo"></div>
+        <br><br><br><br><br><br><br><br><br>
+        <h1>Thanks for shopping at Fadhila.</h1>
+        <i>You are awesome!</i>
+        <h3>Order Details</h3>
+        <p class="text-muted">Tracking Number: {{order.tracking_number}}</p>
+        <p class="text-muted">Owner: {{order.owner.username}}</p>
+        <p class="text-muted">Total Cost: {{order.total_cost}}</p>
+        <p class="text-muted">Ordered on: {{order.created_at}}</p>
+        <p class="text-muted">You have received
+            <ul>
+                <li class="text-danger">{% if serials_premium %}
+                    {{ serials_premium|length }}
+                    {% else %}
+                    0
+                    {% endif %}- premium cards</li>
+                <li class="text-danger">{% if serials_regular %}
+                    {{ serials_regular|length }}
+                    {% else %}
+                    0
+                    {% endif %} - regular cards</li>
+            </ul>
+        </p>
+        <h3>Instructions</h3>
+        <p class="text-muted">
+            Once you receive the cards, print them at your nearest printing store. Then, login to your dashboard and
+            enter the serial number of your card in the
+            Verification field to verify. Once verified your cards will be visible to you on your dashboard and you
+            can track it from there. Ideally, you should verify your batch of 8 cards the moment you receive
+            them
+        </p>
+        <hr>
         <br></br><br></br>
         <div class="footer">
             <p>Fadhila Team &copy; 2019
-                    <a href="www.fadhilanetwork.com/contactus" class="text-muted">Contact Us</a></p>
+                <a href="www.fadhilanetwork.com/contactus" class="text-muted">Contact Us</a></p>
         </div>
-
-                {% for serial in serials_premium  %}
-                <div class="mx-auto content w-40">
-                    <h3 class="serial-txt">{{serial}}</h3>
-                </div>
-                {% endfor %}
-                {% for serial in serials_regular  %}
-                <div class="mx-auto content w-40">
-                    <h3 class="serial-txt">{{serial}}</h3>
-                </div>
-                {% endfor %}
-        </div>
+            {% for serial in serials_premium  %}
+            <div class="content">
+                <h3 class="serial-txt">{{serial}}</h3>
+            </div>
+            {% endfor %}
+            {% for serial in serials_regular  %}
+            <div class="content-pre">
+                <h3 class="serial-txt">{{serial}}</h3>
+            </div>
+            {% endfor %}
     </div>
-    </div>
-    <script src="{% static 'js/jquery.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-</body>
+</div>
+</div>
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
 
 </html>

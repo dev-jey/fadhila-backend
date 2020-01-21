@@ -11,7 +11,8 @@ from messenger.apps.cards.models import Card
 from messenger.apps.cards.objects import CardsDataType
 from .models import Orders, User, Cart, Locations
 from messenger.apps.cards.utils import get_paginator, items_getter_helper
-
+from messenger.apps.payments.schema import Query as PayQuery
+from messenger.apps.cards.tasks import task_create_random_serials
 
 class Stats(graphene.ObjectType):
     users = graphene.Int()
@@ -87,6 +88,11 @@ class Query(graphene.AbstractType):
     @login_required
     def resolve_all_orders(self, info, **kwargs):
         '''Resolves all the orders'''
+        all_orders = Orders.objects.all()
+        task_create_random_serials()
+        for order in all_orders:
+            PayQuery.resolve_check_payment_details(None, None, tracking_number=order.tracking_number)
+
         search = kwargs.get('search', None)
         page = kwargs.get('page', None)
         get_all = kwargs.get('get_all')

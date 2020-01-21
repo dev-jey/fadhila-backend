@@ -15,14 +15,28 @@
     text-align: center;
     border-radius: 5px;
     justify-content: center;
-    padding-top:450px;
+    padding-top:170px;
+    margin-left: 15%;
+  transform-origin: center;
+  transform: rotate(270deg);
   }
   .content{background-image:url('../images/premium.png');
     background-repeat:no-repeat ;
-    width: 40%;
     margin: auto;
-    margin-top: 20%;
+    width: 47%;
+    float: left;
+    margin-top: 6%;
     background-size:cover ;
-    height: 600px; padding: 2%;}
+    margin-right: 3%;
+    height: 286px; }
+    .content-pre{background-image:url('../images/card.jpg');
+      background-repeat:no-repeat ;
+      margin: auto;
+      width: 47%;
+      float: left;
+      margin-top: 6%;
+      background-size:cover ;
+      margin-right: 3%;
+      height: 286px; }
   .logo{width: 100%; height: 300px; border: none; justify-content: left;
 background-image: url('../images/logo.png'); background-size: 100%;  background-repeat: no-repeat;}

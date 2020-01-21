@@ -11,7 +11,6 @@ from .objects import CardType, CardPaginatedType
 from messenger.apps.feedback.models import Feedback
 from .models import Card, Tracker
 from django.template.loader import render_to_string
-from .tasks import task_create_random_serials
 # from .utils import get_paginator, items_getter_helper
 
 
@@ -80,7 +79,6 @@ class CreateCard(graphene.Mutation):
     def mutate(self, info, **kwargs):
         '''Generate random x number of cards'''
         try:
-            task_create_random_serials()
             stringLength = 6
             card = {}
             no_of_regular = kwargs.get('no_of_regular', None)

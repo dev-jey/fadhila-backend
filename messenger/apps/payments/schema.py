@@ -20,7 +20,7 @@ from messenger.apps.orders.objects import OrderType
 
 pesapal.consumer_key = os.environ['PESAPAL_KEY']
 pesapal.consumer_secret = os.environ['PESAPAL_SECRET']
-pesapal.testing =  False
+pesapal.testing = False
 
 
 class Query(graphene.AbstractType):
@@ -31,81 +31,87 @@ class Query(graphene.AbstractType):
     save_tracking_details = graphene.Field(OrderType, pesapal_merchant_reference=graphene.String(
     ), pesapal_transaction_tracking_id=graphene.String())
 
-    check_payment_details = graphene.Field(OrderType, tracking_number=graphene.String())
+    check_payment_details = graphene.Field(
+        OrderType, tracking_number=graphene.String())
 
     def resolve_save_tracking_details(self, info, **kwargs):
         try:
-            my_cart = Cart.objects.get(owner=info.context.user.id)
-            tracking_number = uuid.uuid4().hex.upper()[0:8]
-            new_order = Orders(
-                tracking_number=tracking_number,
-                status="P",
-                address=my_cart.address,
-                receiver_fname=my_cart.receiver_fname,
-                receiver_lname=my_cart.receiver_lname,
-                mobile_no=my_cart.mobile_no,
-                no_of_regular_batches=my_cart.no_of_regular_batches,
-                no_of_premium_batches=my_cart.no_of_premium_batches,
-                total_cost=my_cart.total_price,
-                owner=my_cart.owner
-            )
-            new_order.save()
-            my_cart.delete()
+            existing = PaymentsTracker.objects.filter(pesapal_merchant_reference=kwargs.get(
+                'pesapal_merchant_reference'))
+            if not existing:
+                my_cart = Cart.objects.get(owner=info.context.user.id)
+                tracking_number = uuid.uuid4().hex.upper()[0:8]
+                new_order = Orders(
+                    tracking_number=tracking_number,
+                    status="P",
+                    address=my_cart.address,
+                    receiver_fname=my_cart.receiver_fname,
+                    receiver_lname=my_cart.receiver_lname,
+                    mobile_no=my_cart.mobile_no,
+                    no_of_regular_batches=my_cart.no_of_regular_batches,
+                    no_of_premium_batches=my_cart.no_of_premium_batches,
+                    total_cost=my_cart.total_price,
+                    owner=my_cart.owner
+                )
+                new_order.save()
+                my_cart.delete()
 
-            track = PaymentsTracker(
-                order=new_order,
-                tracking_number = tracking_number,
-                pesapal_merchant_reference=kwargs.get(
-                    'pesapal_merchant_reference'),
-                pesapal_transaction_tracking_id=kwargs.get(
-                    'pesapal_transaction_tracking_id')
-            )
-            track.save()
-            return new_order
+                track = PaymentsTracker(
+                    order=new_order,
+                    tracking_number=tracking_number,
+                    pesapal_merchant_reference=kwargs.get(
+                        'pesapal_merchant_reference'),
+                    pesapal_transaction_tracking_id=kwargs.get(
+                        'pesapal_transaction_tracking_id')
+                )
+                track.save()
+                return new_order
         except Exception:
             pass
 
     def resolve_check_payment_details(self, info, **kwargs):
         tracking_number = kwargs.get('tracking_number')
         try:
-            track_details = PaymentsTracker.objects.get(tracking_number=tracking_number)
-            post_params = {
-                'pesapal_merchant_reference': track_details.pesapal_merchant_reference,
-                'pesapal_transaction_tracking_id': track_details.pesapal_transaction_tracking_id
-            }
-            new_order = Orders.objects.get(tracking_number=tracking_number)
-            url = pesapal.queryPaymentDetails(post_params)
-            response = urlopen(url)
-            res = str(response.read().decode('utf-8'))[22:]
-            if(res.split(',')[2] == 'INVALID'):
-                new_order.status = 'C'
-                new_order.save()
-            if(res.split(',')[2] == 'FAILED'):
-                new_order.status = 'C'
-                new_order.save()
-            payment_mode = 'U'
-            if(res.split(',')[1] == 'MPESA'):
-                payment_mode = 'M'
-            if(res.split(',')[1] == 'ZAP'):
-                payment_mode = 'A'
-            if(res.split(',')[1] == 'COOPMOBILE'):
-                payment_mode = 'C'
-            if(res.split(',')[1] == 'KREPMOBILE'):
-                payment_mode = 'K'
-            if(res.split(',')[2] == 'COMPLETED'):
-                new_order.status = 'S'
-                new_order.save()
-                payment = Payments(
-                    ref_number=res.split(',')[0],
-                    amount=new_order.total_cost,
-                    mobile_no='N/A',
-                    payment_mode=payment_mode,
-                    paid_at=datetime.datetime.now(),
-                    order=new_order,
-                    owner=new_order.owner
-                )
-                payment.save()
-            return new_order
+            track_details = PaymentsTracker.objects.get(
+                tracking_number=tracking_number)
+            if track_details:
+                post_params = {
+                    'pesapal_merchant_reference': track_details.pesapal_merchant_reference,
+                    'pesapal_transaction_tracking_id': track_details.pesapal_transaction_tracking_id
+                }
+                new_order = Orders.objects.get(tracking_number=tracking_number)
+                url = pesapal.queryPaymentDetails(post_params)
+                response = urlopen(url)
+                res = str(response.read().decode('utf-8'))[22:]
+                if(res == 'INVALID' or res.split(',')[2] == 'INVALID'):
+                    new_order.status = 'C'
+                    new_order.save()
+                if(res == 'FAILED' or res.split(',')[2] == 'FAILED'):
+                    new_order.status = 'C'
+                    new_order.save()
+                payment_mode = 'U'
+                if(res.split(',')[1] == 'MPESA'):
+                    payment_mode = 'M'
+                if(res.split(',')[1] == 'ZAP'):
+                    payment_mode = 'A'
+                if(res.split(',')[1] == 'COOPMOBILE'):
+                    payment_mode = 'C'
+                if(res.split(',')[1] == 'KREPMOBILE'):
+                    payment_mode = 'K'
+                if(res == 'COMPLETED' or res.split(',')[2] == 'COMPLETED'):
+                    new_order.status = 'S'
+                    new_order.save()
+                    payment = Payments(
+                        ref_number=res.split(',')[0],
+                        amount=new_order.total_cost,
+                        mobile_no='N/A',
+                        payment_mode=payment_mode,
+                        paid_at=datetime.datetime.now(),
+                        order=new_order,
+                        owner=new_order.owner
+                    )
+                    payment.save()
+                return new_order
         except BaseException as e:
             print(e)
 
