@@ -6,3 +6,4 @@ __pycache__
 dump.rdb
 celerybeat.pid
 celerybeat-schedule
+staticfiles/

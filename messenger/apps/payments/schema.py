@@ -83,22 +83,22 @@ class Query(graphene.AbstractType):
                 url = pesapal.queryPaymentDetails(post_params)
                 response = urlopen(url)
                 res = str(response.read().decode('utf-8'))[22:]
-                if(res == 'INVALID' or res.split(',')[2] == 'INVALID'):
+                if(res == 'INVALID' or (len(res.split(',')) > 1 and res.split(',')[2] == 'INVALID')):
                     new_order.status = 'C'
                     new_order.save()
-                if(res == 'FAILED' or res.split(',')[2] == 'FAILED'):
+                if(res == 'FAILED' or (len(res.split(',')) > 1 and res.split(',')[2] == 'FAILED')):
                     new_order.status = 'C'
                     new_order.save()
                 payment_mode = 'U'
-                if(res.split(',')[1] == 'MPESA'):
+                if(len(res.split(',')) > 1 and res.split(',')[1] == 'MPESA'):
                     payment_mode = 'M'
-                if(res.split(',')[1] == 'ZAP'):
+                if(len(res.split(',')) > 1 and res.split(',')[1] == 'ZAP'):
                     payment_mode = 'A'
-                if(res.split(',')[1] == 'COOPMOBILE'):
+                if(len(res.split(',')) > 1 and res.split(',')[1] == 'COOPMOBILE'):
                     payment_mode = 'C'
-                if(res.split(',')[1] == 'KREPMOBILE'):
+                if(len(res.split(',')) > 1 and res.split(',')[1] == 'KREPMOBILE'):
                     payment_mode = 'K'
-                if(res == 'COMPLETED' or res.split(',')[2] == 'COMPLETED'):
+                if(res == 'COMPLETED' or (len(res.split(',')) > 1 and res.split(',')[2] == 'COMPLETED')):
                     new_order.status = 'S'
                     new_order.save()
                     payment = Payments(
@@ -137,7 +137,7 @@ class PesapalPayment(graphene.Mutation):
             }
             tracking_number = uuid.uuid4().hex.upper()[0:8]
             request_data = {
-                'Amount': str(1),
+                'Amount': str(amount),
                 'Currency': 'KES',
                 'Description': 'Cards purchase',
                 'Type': 'MERCHANT',

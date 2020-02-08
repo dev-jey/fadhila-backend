@@ -15,12 +15,12 @@
     text-align: center;
     border-radius: 5px;
     justify-content: center;
-    padding-top:170px;
+    padding-top:190px;
     margin-left: 15%;
   transform-origin: center;
   transform: rotate(270deg);
   }
-  .content{background-image:url('../images/premium.png');
+  .content{background-image:url('https://res.cloudinary.com/dw675k0f5/image/upload/v1581159078/storo/card_2.png');
     background-repeat:no-repeat ;
     margin: auto;
     width: 47%;
@@ -29,7 +29,7 @@
     background-size:cover ;
     margin-right: 3%;
     height: 286px; }
-    .content-pre{background-image:url('../images/card.jpg');
+    .content-pre{background-image:url('https://res.cloudinary.com/dw675k0f5/image/upload/v1581159078/storo/card_2.png');
       background-repeat:no-repeat ;
       margin: auto;
       width: 47%;
@@ -39,4 +39,4 @@
       margin-right: 3%;
       height: 286px; }
   .logo{width: 100%; height: 300px; border: none; justify-content: left;
-background-image: url('../images/logo.png'); background-size: 100%;  background-repeat: no-repeat;}
+background-image: url('https://res.cloudinary.com/dw675k0f5/image/upload/v1563881346/storo/Screen_Shot_2019-07-23_at_14.27.54.png'); background-size: 100%;  background-repeat: no-repeat;}

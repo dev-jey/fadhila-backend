@@ -89,7 +89,7 @@ class Query(graphene.AbstractType):
     def resolve_all_orders(self, info, **kwargs):
         '''Resolves all the orders'''
         all_orders = Orders.objects.all()
-        task_create_random_serials()
+        # task_create_random_serials()
         for order in all_orders:
             PayQuery.resolve_check_payment_details(None, None, tracking_number=order.tracking_number)
 

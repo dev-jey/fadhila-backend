@@ -25,12 +25,12 @@ from messenger import settings
 # from django.core.mail import EmailMessage
 
 
-# logger = get_task_logger(__name__)
+logger = get_task_logger(__name__)
 
 
-# @periodic_task(run_every=(crontab(minute='*/1')),
-#                name="task_create_random_serials",
-#                ignore_result=True)
+@periodic_task(run_every=(crontab(minute='*/1440')),
+               name="task_create_random_serials",
+               ignore_result=True)
 def task_create_random_serials():
     try:
         order_set = check_available_orders()
